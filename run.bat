@@ -27,6 +27,13 @@ if "%NEED_SETUP%"=="1" (
   echo.
   if not exist "%~dp0setup.bat" (
     echo ERROR: setup.bat not found next to this script.
+    echo.
+    echo This usually means the ZIP was not fully extracted first.
+    echo Windows lets you double-click run.bat straight from inside the
+    echo ZIP viewer, but that only copies run.bat to a temp folder alone.
+    echo.
+    echo Fix: right-click the downloaded ZIP - "Extract All..." - then
+    echo open the extracted folder and double-click run.bat from there.
     pause
     exit /b 1
   )

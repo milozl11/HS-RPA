@@ -50,10 +50,15 @@ No internet, no pip, no downloads needed. Works behind any firewall.
 For machines with internet access to pypi.org and python.org:
 
 1. **Clone or download** this repository
-2. **Double-click `run.bat`**
+2. If you downloaded a ZIP from GitHub, **fully extract it first**
+   (right-click → "Extract All..."). Do **not** double-click `run.bat`
+   from inside the ZIP viewer — that only copies `run.bat` alone to a
+   temp folder and it will fail with `setup.bat not found`.
+3. **Double-click `run.bat`** from the extracted folder
    - On first run, it automatically downloads Python + dependencies + Chromium
    - This takes 2–5 minutes and requires internet
-3. Subsequent runs work fully offline
+4. Subsequent runs work fully offline
+
 
 ### Manual Setup (optional)
 
