@@ -34,20 +34,28 @@ layout, columns, preamble, styles, and any additional sheets are preserved.
 
 ## Distribution Methods
 
-### Method A: Pre-built Bundle (recommended for corporate environments)
+### Method A: Pre-built Bundle (recommended — required on corporate networks)
 
-No internet, no pip, no downloads needed. Works behind any firewall.
+No internet, no pip, no downloads needed. Works behind any firewall, including
+networks that intercept HTTPS with an SSO/SAML proxy (Method B's downloads to
+python.org/pypi.org will fail on such networks with a SAML login page instead
+of the expected file).
 
-1. Get `FT6AUTO_v1.2.zip` from the person who built the bundle
+1. Get `FT6AUTO_v1.2.zip` from the project's **GitHub Releases** page, or from
+   the person who built the bundle
 2. **Extract** the ZIP to any local folder (e.g. `C:\Tools\FT6AUTO`)
 3. **Double-click `run.bat`**
 4. The web UI opens at **http://localhost:5000**
 
-> To create the bundle: run `bundle.bat` on a machine where setup has already been completed.
+> To create the bundle: run `bundle.bat` on a machine where setup has already
+> been completed. It packages the app together with the already-working
+> `python-embed\` and `playwright-browsers\` folders into one ZIP — nothing is
+> downloaded again at run time.
 
-### Method B: Clone + Auto-Setup (requires internet once)
+### Method B: Clone + Auto-Setup (requires unrestricted internet once)
 
-For machines with internet access to pypi.org and python.org:
+For machines with direct, unproxied internet access to pypi.org and
+python.org:
 
 1. **Clone or download** this repository
 2. If you downloaded a ZIP from GitHub, **fully extract it first**
@@ -58,6 +66,10 @@ For machines with internet access to pypi.org and python.org:
    - On first run, it automatically downloads Python + dependencies + Chromium
    - This takes 2–5 minutes and requires internet
 4. Subsequent runs work fully offline
+
+If step 3 fails with an HTML/SAML login page instead of a downloaded file
+(common on corporate networks with an SSO web proxy), the network is blocking
+direct downloads to python.org/pypi.org. Use **Method A** instead.
 
 
 ### Manual Setup (optional)
