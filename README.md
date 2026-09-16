@@ -1,4 +1,3 @@
-# FT6AUTO — SAP GTS HS Classification & Customs Description Uploader
 
 Automated batch update of material customs descriptions in SAP Fiori (GTS Foreign Trade).
 Reads materials + multilingual descriptions from an Excel file, then drives SAP via browser automation.
