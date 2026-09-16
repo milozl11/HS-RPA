@@ -4,52 +4,45 @@ REM  FT6AUTO - Portable launcher (no Python installation required)
 REM  Uses the bundled python-embed\ interpreter.
 REM =====================================================================
 setlocal EnableExtensions EnableDelayedExpansion
-cd /d "%~dp0"
+title FT6AUTO Launcher
+set "APP_ROOT=%~dp0"
+echo Application folder: %APP_ROOT%
 
 REM ---- Locate the embedded Python ----
-set "PYTHON_EXE=%~dp0python-embed\python.exe"
-set "PLAYWRIGHT_BROWSERS_PATH=%~dp0playwright-browsers"
+set "PYTHON_EXE=%APP_ROOT%python-embed\python.exe"
+set "PLAYWRIGHT_BROWSERS_PATH=%APP_ROOT%playwright-browsers"
 set "CHROMIUM_EXE=%PLAYWRIGHT_BROWSERS_PATH%\chromium-1134\chrome-win\chrome.exe"
 
-REM ---- Auto-setup: download Python + deps + browser if missing ----
-set "NEED_SETUP=0"
-if not exist "%PYTHON_EXE%" set "NEED_SETUP=1"
-if not exist "%CHROMIUM_EXE%" set "NEED_SETUP=1"
-if "%NEED_SETUP%"=="0" (
-  "%PYTHON_EXE%" -c "import flask, openpyxl, waitress, playwright" >nul 2>nul
-  if errorlevel 1 set "NEED_SETUP=1"
+REM ---- Validate the complete offline bundle ----
+if not exist "%PYTHON_EXE%" (
+  echo.
+  echo ERROR: Offline bundle is incomplete. Missing:
+  echo   %PYTHON_EXE%
+  echo Extract the complete ZIP before running. No download is required.
+  pause
+  exit /b 1
 )
-
-if "%NEED_SETUP%"=="1" (
+if not exist "%CHROMIUM_EXE%" (
   echo.
-  echo  First run detected - running automatic setup...
-  echo  This requires internet access and will take a few minutes.
+  echo ERROR: Offline bundle is incomplete. Missing:
+  echo   %CHROMIUM_EXE%
+  echo Check whether antivirus quarantined chrome.exe, then extract again.
+  pause
+  exit /b 1
+)
+if not exist "%APP_ROOT%server\app.py" (
   echo.
-  if not exist "%~dp0setup.bat" (
-    echo ERROR: setup.bat not found next to this script.
-    echo.
-    echo This usually means the ZIP was not fully extracted first.
-    echo Windows lets you double-click run.bat straight from inside the
-    echo ZIP viewer, but that only copies run.bat to a temp folder alone.
-    echo.
-    echo Fix: right-click the downloaded ZIP - "Extract All..." - then
-    echo open the extracted folder and double-click run.bat from there.
-    pause
-    exit /b 1
-  )
-  call "%~dp0setup.bat" --no-pause
-  if errorlevel 1 (
-    echo.
-    echo ERROR: Setup failed. Check the output above.
-    pause
-    exit /b 1
-  )
-  REM Re-check after setup
-  if not exist "%PYTHON_EXE%" (
-    echo ERROR: Setup completed but Python was not installed correctly.
-    pause
-    exit /b 1
-  )
+  echo ERROR: Offline bundle is incomplete. Missing server\app.py.
+  pause
+  exit /b 1
+)
+"%PYTHON_EXE%" -c "import flask, openpyxl, waitress, playwright" >nul 2>nul
+if errorlevel 1 (
+  echo.
+  echo ERROR: Embedded Python packages are incomplete or blocked.
+  echo No installation is required; extract a fresh copy of the full ZIP.
+  pause
+  exit /b 1
 )
 
 echo.
@@ -60,7 +53,7 @@ echo ===================================================
 echo.
 
 REM ---- Start the server before opening the UI ----
-start "FT6AUTO Server" /min "%PYTHON_EXE%" server\app.py
+start "FT6AUTO Server" /min /d "%APP_ROOT%" "%PYTHON_EXE%" "%APP_ROOT%server\app.py"
 set "SERVER_READY=0"
 for /l %%N in (1,1,30) do (
   if "!SERVER_READY!"=="0" (
