@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAP GTS - Panou aplicatii</title>
+    <link rel="stylesheet" href="/static/app.css" />
+    <style>
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 14px;
+      }
+      .app-card {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+      }
+      .app-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--surface-soft);
+        border-bottom: 1px solid var(--line);
+      }
+      .app-icon {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--primary);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .app-icon.hs {
+        background: var(--success);
+      }
+      .app-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+      .app-tag {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .app-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 16px;
+        border-top: 1px solid var(--line);
+      }
+      .open {
+        color: var(--primary);
+        font-weight: 700;
+      }
+      .app-body,
+      .page-kicker,
+      .note {
+        display: none;
+      }
+      @media (max-width: 620px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="fixed-shell">
+    <header class="topbar">
+      <div class="brand-mark">GTS</div>
+      <div>
+        <h1 class="brand-title" data-i18n="brand">SAP GTS - Panou aplicatii</h1>
+        <div class="brand-subtitle" data-i18n="brandSub">
+          Automatizari locale pentru date vamale
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="lang-switch" aria-label="Language">
+        <button id="langRo" type="button">RO</button>
+        <button id="langEn" type="button">EN</button>
+      </div>
+      <span id="envBadge" class="badge">TEST</span>
+      <button id="btnQuitApp" class="quit-btn" type="button" data-i18n="quit">
+        Inchide aplicatia
+      </button>
+    </header>
+
+    <main>
+      <h2 class="page-title" data-i18n="title">Alege aplicatia</h2>
+      <p class="page-kicker" data-i18n="subtitle">
+        Fiecare aplicatie ruleaza local si foloseste propria sesiune de browser
+        SAP.
+      </p>
+
+      <div class="grid">
+        <a class="app-card" href="/apps/descriptions">
+          <div class="app-head">
+            <div class="app-icon">DSC</div>
+            <div>
+              <h3 class="app-title" data-i18n="descTitle">Descrieri vamale</h3>
+              <div class="app-tag">Manage Customs Commercial Descriptions</div>
+            </div>
+          </div>
+          <div class="app-body">
+            <p data-i18n="descBody">
+              Incarca descrierile comerciale pe materiale, pe limba si tara, din
+              fisier Excel.
+            </p>
+            <ol class="steps">
+              <li data-i18n="descStep1">Configureaza limba si coloanele</li>
+              <li data-i18n="descStep2">Previzualizeaza fisierul Excel</li>
+              <li data-i18n="descStep3">
+                Ruleaza job-ul si descarca raportul CSV
+              </li>
+            </ol>
+          </div>
+          <div class="app-foot">
+            <span class="pill"
+              ><span class="dot" id="dotDesc"></span
+              ><span id="stateDesc">Browser oprit</span></span
+            >
+            <span class="open" data-i18n="open">Deschide &rarr;</span>
+          </div>
+        </a>
+
+        <a class="app-card" href="/apps/hs">
+          <div class="app-head">
+            <div class="app-icon hs">HS</div>
+            <div>
+              <h3 class="app-title" data-i18n="hsTitle">
+                Coduri tarifare (HS)
+              </h3>
+              <div class="app-tag">Classify Products</div>
+            </div>
+          </div>
+          <div class="app-body">
+            <p data-i18n="hsBody">
+              Descarca worklistul din SAP, determina codul tarifar dupa TECDOC
+              si mentine in masa pe grupuri.
+            </p>
+            <ol class="steps">
+              <li data-i18n="hsStep1">
+                Automat: varianta, executie, export din SAP
+              </li>
+              <li data-i18n="hsStep2">
+                Semi-automat: incarci tu exportul si alegi schema
+              </li>
+              <li data-i18n="hsStep3">
+                Aprobi grupurile, restul se separa in fisier
+              </li>
+            </ol>
+          </div>
+          <div class="app-foot">
+            <span class="pill"
+              ><span class="dot" id="dotHs"></span
+              ><span id="stateHs">Browser oprit</span></span
+            >
+            <span class="open" data-i18n="open">Deschide &rarr;</span>
+          </div>
+        </a>
+
+        <a class="app-card" href="/apps/hs/reports">
+          <div class="app-head">
+            <div class="app-icon" style="background: var(--ink)">RPT</div>
+            <div>
+              <h3 class="app-title" data-i18n="reportsTitle">
+                Rapoarte si trasabilitate
+              </h3>
+              <div class="app-tag">HS workflow history</div>
+            </div>
+          </div>
+          <div class="app-body">
+            <p data-i18n="reportsBody">
+              Consulta rezultatele persistente pe schema, confirmarile pe
+              material si worklisturile ramase dupa clasificare.
+            </p>
+            <ol class="steps">
+              <li data-i18n="reportsStep1">Rezultate HS si DE/EN separate</li>
+              <li data-i18n="reportsStep2">Cronologie tehnica si blocaje</li>
+              <li data-i18n="reportsStep3">
+                Descarcare worklist ramas si raport CSV
+              </li>
+            </ol>
+          </div>
+          <div class="app-foot">
+            <span class="pill"
+              ><span class="dot ok"></span
+              ><span data-i18n="localHistory">Istoric local</span></span
+            >
+            <span class="open" data-i18n="open">Deschide &rarr;</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="note" data-i18n-html="note">
+        <b>Protectie productie:</b> aplicatia de coduri tarifare ruleaza
+        implicit in mod <b>dry-run</b>. Completeaza dialogul de clasificare in
+        masa si se opreste inainte de <b>Start Mass Classification (F8)</b>,
+        deci nu salveaza nimic in SAP pana cand nu activezi explicit commit-ul.
+      </div>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const LANG_KEY = "hs_ui_lang";
+      const I18N = {
+        ro: {
+          brand: "SAP GTS - Panou aplicatii",
+          brandSub: "Automatizari locale pentru date vamale",
+          title: "Alege aplicatia",
+          subtitle:
+            "Fiecare aplicatie ruleaza local si foloseste propria sesiune de browser SAP.",
+          descTitle: "Descrieri vamale",
+          descBody:
+            "Incarca descrierile comerciale pe materiale, pe limba si tara, din fisier Excel.",
+          descStep1: "Configureaza limba si coloanele",
+          descStep2: "Previzualizeaza fisierul Excel",
+          descStep3: "Ruleaza job-ul si descarca raportul CSV",
+          hsTitle: "Coduri tarifare (HS)",
+          hsBody:
+            "Descarca worklistul din SAP, determina codul tarifar dupa TECDOC si mentine in masa pe grupuri.",
+          hsStep1: "Automat: varianta, executie, export din SAP",
+          hsStep2: "Semi-automat: incarci tu exportul si alegi schema",
+          hsStep3: "Aprobi grupurile; lista ramasa se salveaza automat",
+          reportsTitle: "Rapoarte si trasabilitate",
+          reportsBody:
+            "Consulta rezultatele persistente pe schema, confirmarile pe material si worklisturile ramase dupa clasificare.",
+          reportsStep1: "Rezultate HS si DE/EN separate",
+          reportsStep2: "Cronologie tehnica si blocaje",
+          reportsStep3: "Descarcare worklist ramas si raport CSV",
+          localHistory: "Istoric local",
+          open: "Deschide \u2192",
+          quit: "Inchide aplicatia",
+          quitConfirm:
+            "Inchid aplicatia (server + browser Chromium)? Dupa aceea poti relansa run.bat.",
+          quitDone: "Aplicatia s-a inchis. Poti relansa run.bat.",
+          note: "<b>Protectie productie:</b> aplicatia de coduri tarifare ruleaza implicit in mod <b>dry-run</b>. Completeaza dialogul de clasificare in masa si se opreste inainte de <b>Start Mass Classification (F8)</b>, deci nu salveaza nimic in SAP pana cand nu activezi explicit commit-ul.",
+          stopped: "Browser oprit",
+          starting: "Pornire browser",
+          ready: "Browser activ",
+          busy: "In lucru",
+          error: "Eroare browser",
+          stopping: "Se inchide",
+          unknown: "Necunoscut",
+        },
+        en: {
+          brand: "SAP GTS - Application hub",
+          brandSub: "Local automation for customs data",
+          title: "Choose an application",
+          subtitle:
+            "Each application runs locally and uses its own SAP browser session.",
+          descTitle: "Customs descriptions",
+          descBody:
+            "Upload commercial descriptions for materials, language, and country from an Excel file.",
+          descStep1: "Configure language and columns",
+          descStep2: "Preview the Excel file",
+          descStep3: "Run the job and download the CSV report",
+          hsTitle: "Tariff codes (HS)",
+          hsBody:
+            "Download the SAP worklist, determine tariff codes from TECDOC, and maintain materials in groups.",
+          hsStep1: "Automatic: SAP variant, run, and export",
+          hsStep2: "Semi-automatic: upload the export and select a scheme",
+          hsStep3:
+            "Approve groups; the remaining worklist is saved automatically",
+          quit: "Quit application",
+          quitConfirm:
+            "Close the application (server + Chromium browser)? You can then start run.bat again.",
+          quitDone: "The application has closed. You can start run.bat again.",
+          reportsTitle: "Reports and traceability",
+          reportsBody:
+            "Review persistent per-scheme results, material confirmations, and the worklists remaining after classification.",
+          reportsStep1: "Separate HS and DE/EN results",
+          reportsStep2: "Technical timeline and blockers",
+          reportsStep3: "Download remaining worklist and CSV report",
+          localHistory: "Local history",
+          open: "Open \u2192",
+          note: "<b>Production protection:</b> tariff-code automation runs in <b>dry-run</b> mode by default. It fills the mass-classification dialog and stops before <b>Start Mass Classification (F8)</b>, so nothing is saved in SAP until commit is explicitly enabled.",
+          stopped: "Browser stopped",
+          starting: "Starting browser",
+          ready: "Browser active",
+          busy: "Running",
+          error: "Browser error",
+          stopping: "Stopping",
+          unknown: "Unknown",
+        },
+      };
+      let lang = localStorage.getItem(LANG_KEY) === "en" ? "en" : "ro";
+      let lastStates = { desc: "stopped", hs: "stopped" };
+
+      function t(key) {
+        return I18N[lang][key] || I18N.ro[key] || key;
+      }
+      function setLanguage(next) {
+        lang = next === "en" ? "en" : "ro";
+        localStorage.setItem(LANG_KEY, lang);
+        document.documentElement.lang = lang;
+        document.title =
+          lang === "en"
+            ? "SAP GTS - Application hub"
+            : "SAP GTS - Panou aplicatii";
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          node.textContent = t(node.dataset.i18n);
+        });
+        document.querySelectorAll("[data-i18n-html]").forEach((node) => {
+          node.innerHTML = t(node.dataset.i18nHtml);
+        });
+        $("langRo").classList.toggle("active", lang === "ro");
+        $("langEn").classList.toggle("active", lang === "en");
+        setState("dotDesc", "stateDesc", lastStates.desc);
+        setState("dotHs", "stateHs", lastStates.hs);
+      }
+      $("langRo").onclick = () => setLanguage("ro");
+      $("langEn").onclick = () => setLanguage("en");
+      $("btnQuitApp").onclick = async () => {
+        if (!confirm(t("quitConfirm"))) return;
+        $("btnQuitApp").disabled = true;
+        try {
+          const response = await fetch("/shutdown", { method: "POST" });
+          const result = await response.json();
+          if (!response.ok) {
+            alert(result.error || t("quitDone"));
+            $("btnQuitApp").disabled = false;
+            return;
+          }
+        } catch (e) {}
+        document.body.innerHTML =
+          "<p style='padding:24px;font-family:Segoe UI'>" +
+          t("quitDone") +
+          "</p>";
+      };
+
+      function setState(dotId, textId, state) {
+        const classes = {
+          stopped: "",
+          starting: "run",
+          ready: "ok",
+          busy: "run",
+          error: "err",
+          stopping: "run",
+        };
+        const cls = classes[state] || "";
+        const dot = $(dotId);
+        dot.className = "dot" + (cls ? " " + cls : "");
+        $(textId).textContent = t(state || "unknown");
+      }
+
+      async function refresh() {
+        try {
+          const s = await (await fetch("/session/status")).json();
+          lastStates.desc = s.state;
+          setState("dotDesc", "stateDesc", s.state);
+        } catch (e) {}
+        try {
+          const s = await (await fetch("/hs/session/status")).json();
+          lastStates.hs = s.state;
+          setState("dotHs", "stateHs", s.state);
+        } catch (e) {}
+        try {
+          const env = await (await fetch("/env")).json();
+          const badge = $("envBadge");
+          const descLabel = env.label || "TEST";
+          const hsLabel = env.hs_label || descLabel;
+          badge.textContent = env.is_production
+            ? "PRODUCTIV"
+            : hsLabel === descLabel
+              ? descLabel
+              : `DSC ${descLabel} · HS ${hsLabel}`;
+          badge.title = `Descrieri: ${env.url || "-"}\nHS: ${env.hs_url || "-"}`;
+          if (env.is_production) {
+            badge.style.background = "#fdecec";
+            badge.style.color = "#a51d2d";
+            badge.style.borderColor = "#f2b8b8";
+          }
+        } catch (e) {}
+      }
+
+      setLanguage(lang);
+      refresh();
+      setInterval(refresh, 5000);
+    </script>
+  </body>
+</html>

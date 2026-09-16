@@ -1,0 +1,32 @@
+# Local runtimes and browser state
+python-embed/
+playwright-browsers/
+user-data-hs/
+
+# Runtime input/output and generated reports
+uploads/
+uploads-hs/
+downloads/
+reports-hs/
+server/graphify-out/
+
+# Local secrets and certificates
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python cache and local tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Editors and OS files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

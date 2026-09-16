@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard mentineri - SAP GTS</title>
+    <link rel="stylesheet" href="/static/app.css" />
+    <style>
+      h1 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 20px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .metric {
+        padding: 10px 12px;
+      }
+      .metric span,
+      .metric strong {
+        display: block;
+      }
+      .metric span {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .metric strong {
+        margin-top: 4px;
+        color: var(--ink);
+        font-size: 20px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
+      .chart {
+        width: 100%;
+        height: 260px;
+      }
+      .legend {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .legend i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 6px;
+        border-radius: 3px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      th,
+      td {
+        padding: 7px 9px;
+        border-bottom: 1px solid var(--line);
+        text-align: right;
+        vertical-align: top;
+      }
+      th:first-child,
+      td:first-child {
+        text-align: left;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--surface-strong);
+        color: var(--muted-strong);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      tr.year-row td {
+        background: var(--surface-soft);
+        font-weight: 800;
+        color: var(--ink);
+      }
+      .table-wrap {
+        max-height: 340px;
+        overflow: auto;
+      }
+      @media (max-width: 1040px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .metrics {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body class="fixed-shell">
+    <header class="topbar">
+      <div class="brand">DSH</div>
+      <div class="brand-copy">
+        <strong>Dashboard mentineri</strong>
+        <span>HS si descrieri per luna</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="top-actions">
+        <a class="nav-button" href="/apps/hs/reports">Rapoarte</a>
+        <a class="nav-button" href="/">Panou aplicatii</a>
+        <button type="button" id="btnRefresh" class="ghost compact">
+          Actualizeaza
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-head">
+        <h1>Mentineri HS si descrieri</h1>
+        <div class="spacer"></div>
+        <label for="yearFilter" class="hidden">An</label>
+        <select id="yearFilter" style="width: 150px"></select>
+      </div>
+
+      <section class="metrics" aria-label="Totaluri">
+        <div class="metric">
+          <span>Rulari</span><strong id="mRuns">0</strong>
+        </div>
+        <div class="metric">
+          <span>HS salvate</span><strong id="mHs">0</strong>
+        </div>
+        <div class="metric">
+          <span>Descrieri salvate</span><strong id="mDesc">0</strong>
+        </div>
+        <div class="metric"><span>Erori</span><strong id="mErr">0</strong></div>
+      </section>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="panel-head"><h2>Evolutie lunara</h2></div>
+          <div class="panel-body">
+            <svg
+              id="chart"
+              class="chart"
+              viewBox="0 0 600 260"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Grafic mentineri lunare"
+            ></svg>
+            <div class="legend">
+              <span><i style="background: #4f46e5"></i>HS</span>
+              <span><i style="background: #0f9f6e"></i>Descrieri</span>
+              <span><i style="background: #e11d48"></i>Erori</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Defalcare</h2></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Perioada</th>
+                  <th>Rulari</th>
+                  <th>HS</th>
+                  <th>Descrieri</th>
+                  <th>Erori</th>
+                </tr>
+              </thead>
+              <tbody id="statsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const esc = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (ch) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[ch],
+        );
+      let months = [];
+
+      const errorsOf = (row) =>
+        Number(row.hs_failed || 0) + Number(row.desc_failed || 0);
+      const monthLabel = (month) => {
+        const [year, num] = String(month).split("-");
+        const names = [
+          "Ian",
+          "Feb",
+          "Mar",
+          "Apr",
+          "Mai",
+          "Iun",
+          "Iul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Noi",
+          "Dec",
+        ];
+        return `${names[Number(num) - 1] || num} ${year}`;
+      };
+
+      function selected() {
+        const year = $("yearFilter").value;
+        return year === "all"
+          ? months
+          : months.filter((row) => row.month.startsWith(year));
+      }
+
+      function renderMetrics(rows) {
+        $("mRuns").textContent = rows.reduce(
+          (sum, row) => sum + Number(row.runs || 0),
+          0,
+        );
+        $("mHs").textContent = rows.reduce(
+          (sum, row) => sum + Number(row.hs_committed || 0),
+          0,
+        );
+        $("mDesc").textContent = rows.reduce(
+          (sum, row) => sum + Number(row.desc_saved || 0),
+          0,
+        );
+        $("mErr").textContent = rows.reduce(
+          (sum, row) => sum + errorsOf(row),
+          0,
+        );
+      }
+
+      function renderTable(rows) {
+        const body = $("statsBody");
+        if (!rows.length) {
+          body.innerHTML =
+            '<tr><td colspan="5">Niciun raport inregistrat.</td></tr>';
+          return;
+        }
+        const byYear = new Map();
+        rows.forEach((row) => {
+          const year = row.month.slice(0, 4);
+          if (!byYear.has(year)) byYear.set(year, []);
+          byYear.get(year).push(row);
+        });
+        const chunks = [];
+        [...byYear.keys()]
+          .sort()
+          .reverse()
+          .forEach((year) => {
+            const list = byYear.get(year).slice().reverse();
+            const total = list.reduce(
+              (acc, row) => ({
+                runs: acc.runs + Number(row.runs || 0),
+                hs: acc.hs + Number(row.hs_committed || 0),
+                desc: acc.desc + Number(row.desc_saved || 0),
+                err: acc.err + errorsOf(row),
+              }),
+              { runs: 0, hs: 0, desc: 0, err: 0 },
+            );
+            chunks.push(
+              `<tr class="year-row"><td>${esc(year)}</td><td>${total.runs}</td><td>${total.hs}</td><td>${total.desc}</td><td>${total.err}</td></tr>`,
+            );
+            list.forEach((row) => {
+              chunks.push(
+                `<tr><td>${esc(monthLabel(row.month))}</td><td>${Number(row.runs || 0)}</td><td>${Number(row.hs_committed || 0)}</td><td>${Number(row.desc_saved || 0)}</td><td>${errorsOf(row)}</td></tr>`,
+              );
+            });
+          });
+        body.innerHTML = chunks.join("");
+      }
+
+      function renderChart(rows) {
+        const svg = $("chart");
+        if (!rows.length) {
+          svg.innerHTML =
+            '<text x="300" y="130" text-anchor="middle" fill="#667085" font-size="12">Fara date</text>';
+          return;
+        }
+        const data = rows.slice(-12);
+        const max = Math.max(
+          1,
+          ...data.map((row) =>
+            Math.max(
+              Number(row.hs_committed || 0),
+              Number(row.desc_saved || 0),
+              errorsOf(row),
+            ),
+          ),
+        );
+        const width = 600;
+        const height = 260;
+        const padX = 34;
+        const padY = 20;
+        const base = height - 34;
+        const slot = (width - padX * 2) / data.length;
+        const barWidth = Math.max(3, Math.min(14, slot / 4));
+        const scale = (value) => ((base - padY) * Number(value || 0)) / max;
+        const parts = [
+          `<line x1="${padX}" y1="${base}" x2="${width - padX}" y2="${base}" stroke="#e6e8ee" />`,
+          `<text x="${padX - 6}" y="${padY + 8}" text-anchor="end" fill="#667085" font-size="10">${max}</text>`,
+          `<text x="${padX - 6}" y="${base}" text-anchor="end" fill="#667085" font-size="10">0</text>`,
+        ];
+        data.forEach((row, index) => {
+          const center = padX + slot * index + slot / 2;
+          const series = [
+            { value: row.hs_committed, color: "#4f46e5", offset: -barWidth },
+            { value: row.desc_saved, color: "#0f9f6e", offset: 0 },
+            { value: errorsOf(row), color: "#e11d48", offset: barWidth },
+          ];
+          series.forEach((item) => {
+            const barHeight = scale(item.value);
+            parts.push(
+              `<rect x="${center + item.offset - barWidth / 2}" y="${base - barHeight}" width="${barWidth}" height="${barHeight}" fill="${item.color}" rx="2"><title>${esc(monthLabel(row.month))}: ${Number(item.value || 0)}</title></rect>`,
+            );
+          });
+          parts.push(
+            `<text x="${center}" y="${base + 16}" text-anchor="middle" fill="#667085" font-size="9">${esc(monthLabel(row.month))}</text>`,
+          );
+        });
+        svg.innerHTML = parts.join("");
+      }
+
+      function render() {
+        const rows = selected();
+        renderMetrics(rows);
+        renderTable(rows);
+        renderChart(rows);
+      }
+
+      function fillYears() {
+        const years = [...new Set(months.map((row) => row.month.slice(0, 4)))]
+          .sort()
+          .reverse();
+        const current = $("yearFilter").value;
+        $("yearFilter").innerHTML = [
+          '<option value="all">Toti anii</option>',
+          ...years.map(
+            (year) => `<option value="${esc(year)}">${esc(year)}</option>`,
+          ),
+        ].join("");
+        if (
+          current &&
+          [...$("yearFilter").options].some((o) => o.value === current)
+        ) {
+          $("yearFilter").value = current;
+        }
+      }
+
+      async function load() {
+        const response = await fetch("/hs/reports/stats");
+        const data = await response.json();
+        months = data.months || [];
+        fillYears();
+        render();
+      }
+
+      $("yearFilter").onchange = render;
+      $("btnRefresh").onclick = load;
+      load();
+    </script>
+  </body>
+</html>

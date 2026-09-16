@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rapoarte HS - SAP GTS</title>
+    <link rel="stylesheet" href="/static/app.css" />
+    <style>
+      h1 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 20px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .metric {
+        padding: 10px 12px;
+      }
+      .metric span,
+      .metric strong {
+        display: block;
+      }
+      .metric span {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .metric strong {
+        margin-top: 5px;
+        color: var(--ink);
+        font-size: 20px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 330px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
+      .panel-head {
+        padding: 13px 15px;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface-soft);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .panel-head h2 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 14px;
+      }
+      .panel-body {
+        padding: 14px;
+      }
+      .report-list {
+        max-height: calc(100vh - 235px);
+        overflow: auto;
+        padding: 8px;
+        display: grid;
+        gap: 7px;
+      }
+      .report-item {
+        display: block;
+        width: 100%;
+        min-height: 0;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: #fff;
+        color: var(--text);
+        font-weight: 600;
+        text-align: left;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+      .report-item:hover:not(:disabled) {
+        background: var(--surface-soft);
+        border-color: var(--line-strong);
+        color: var(--text);
+      }
+      .report-item.active {
+        border-color: var(--primary);
+        box-shadow: inset 3px 0 var(--primary);
+        background: var(--primary-soft);
+      }
+      .report-item-top {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .report-item strong {
+        color: var(--ink);
+      }
+      .report-item small {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-weight: 500;
+        line-height: 1.3;
+        font-size: 11px;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #f5f7fa;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .status.completed,
+      .status.committed,
+      .status.confirmed {
+        border-color: #a9e4ce;
+        background: #e8f7f1;
+        color: #087f5b;
+      }
+      .status.failed {
+        border-color: #f2b8b8;
+        background: #fdecec;
+        color: #a51d2d;
+      }
+      .status.warning,
+      .status.dry_run,
+      .status.blocked {
+        border-color: #f2d8a8;
+        background: #fff4df;
+        color: #7a5a12;
+      }
+      .status.running,
+      .status.analyzed {
+        border-color: #b8d2f4;
+        background: #eaf3ff;
+        color: #1558ad;
+      }
+      .status.no_data {
+        border-color: #d5dde8;
+        background: #f4f7fb;
+        color: #4b5b73;
+      }
+      .log-panel {
+        display: grid;
+        gap: 4px;
+        max-height: 520px;
+        overflow: auto;
+        font-family: Consolas, "Cascadia Mono", "Segoe UI Mono", monospace;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .log-line {
+        padding: 6px 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .log-line.error {
+        border-color: #f2b8b8;
+        background: #fff7f7;
+      }
+      .log-line.warn {
+        border-color: #f2d8a8;
+        background: #fffbf2;
+      }
+      .log-stamp {
+        color: var(--muted);
+        margin-right: 8px;
+      }
+      .empty {
+        padding: 54px 20px;
+        text-align: center;
+        color: var(--muted);
+      }
+      .empty strong {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 6px;
+      }
+      .detail {
+        display: grid;
+        gap: 12px;
+      }
+      .run-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .run-head h2 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 17px;
+      }
+      .run-meta {
+        margin-top: 5px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .notice {
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f7faff;
+        line-height: 1.5;
+      }
+      .notice.error {
+        border-color: #f2b8b8;
+        background: #fdecec;
+        color: #8c1b28;
+      }
+      .scheme-grid {
+        display: grid;
+        gap: 6px;
+      }
+      .scheme-card {
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        overflow: hidden;
+      }
+      .scheme-head {
+        padding: 6px 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface-soft);
+        border-bottom: 1px solid var(--line);
+      }
+      .scheme-head code {
+        color: var(--ink);
+        font-weight: 800;
+      }
+      .scheme-facts {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .fact {
+        min-height: 52px;
+        padding: 6px 8px;
+        border-right: 1px solid var(--line);
+      }
+      .fact:last-child {
+        border-right: 0;
+      }
+      .fact b,
+      .fact span,
+      .fact small {
+        display: block;
+      }
+      .fact b {
+        color: var(--muted);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .fact span {
+        margin-top: 2px;
+        color: var(--ink);
+        font-weight: 800;
+        font-size: 12px;
+      }
+      .fact small {
+        margin-top: 1px;
+        color: var(--muted);
+        line-height: 1.3;
+        font-size: 10px;
+      }
+      .fact {
+        overflow: hidden;
+      }
+      .fact .button,
+      .scheme-head small,
+      .page-head p,
+      .empty span {
+        display: none;
+      }
+      .table-wrap {
+        overflow: auto;
+        max-height: 390px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11.5px;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 8px 9px;
+        background: #edf2f8;
+        color: #40516b;
+        text-align: left;
+        text-transform: uppercase;
+        font-size: 9.5px;
+        letter-spacing: 0.04em;
+      }
+      td {
+        padding: 8px 9px;
+        border-top: 1px solid var(--line);
+        vertical-align: top;
+      }
+      td.message {
+        max-width: 340px;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
+      .timeline {
+        display: grid;
+        gap: 6px;
+        max-height: 420px;
+        overflow: auto;
+      }
+      .event {
+        display: grid;
+        grid-template-columns: 76px 112px minmax(0, 1fr);
+        gap: 9px;
+        padding: 8px 9px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+      }
+      .event time {
+        color: var(--muted);
+        font-size: 10px;
+      }
+      .event-type {
+        color: var(--ink);
+        font-size: 10.5px;
+        font-weight: 800;
+      }
+      .event-message {
+        color: var(--muted);
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+      .event.error {
+        border-color: #f2b8b8;
+        background: #fff7f7;
+      }
+      .event.warn {
+        border-color: #f2d8a8;
+        background: #fffbf2;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @media (max-width: 1040px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .report-list {
+          max-height: 290px;
+        }
+        .scheme-facts {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .fact:nth-child(2) {
+          border-right: 0;
+        }
+        .fact:nth-child(-n + 2) {
+          border-bottom: 1px solid var(--line);
+        }
+      }
+      @media (max-width: 680px) {
+        .topbar {
+          padding: 10px 14px;
+          flex-wrap: wrap;
+        }
+        .top-actions {
+          width: 100%;
+          order: 3;
+        }
+        main {
+          width: calc(100% - 20px);
+          margin-top: 12px;
+        }
+        .page-head {
+          align-items: flex-start;
+        }
+        .metrics {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .scheme-facts {
+          grid-template-columns: 1fr;
+        }
+        .fact {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .fact:last-child {
+          border-bottom: 0;
+        }
+        .event {
+          grid-template-columns: 70px minmax(0, 1fr);
+        }
+        .event-message {
+          grid-column: 1 / -1;
+        }
+      }
+    </style>
+  </head>
+  <body class="fixed-shell">
+    <header class="topbar">
+      <div class="brand">RPT</div>
+      <div class="brand-copy">
+        <strong data-i18n="brand">Rapoarte HS</strong>
+        <span data-i18n="brandSub"
+          >Jurnal cronologic pentru clasificare si descrieri</span
+        >
+      </div>
+      <div class="spacer"></div>
+      <div class="top-actions">
+        <a class="button compact" href="/apps/hs" data-i18n="backHs"
+          >Inapoi la HS</a
+        >
+        <a
+          class="button compact"
+          href="/apps/descriptions"
+          data-i18n="standalone"
+          >Descrieri standalone</a
+        >
+        <div class="lang-switch" aria-label="Language">
+          <button type="button" id="langRo">RO</button>
+          <button type="button" id="langEn">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-head">
+        <div>
+          <h1 data-i18n="title">Istoric si rapoarte de executie</h1>
+          <p data-i18n="subtitle">
+            Ce a facut RPA pe fiecare schema: varianta, worklist, HS, descrieri
+            si erori, in ordine cronologica.
+          </p>
+        </div>
+        <div class="spacer"></div>
+        <button type="button" id="btnRefresh" data-i18n="refresh">
+          Actualizeaza
+        </button>
+        <button
+          type="button"
+          id="btnDeleteAll"
+          class="danger"
+          data-i18n="deleteAll"
+        >
+          Sterge toate rapoartele
+        </button>
+      </div>
+
+      <section class="metrics" aria-label="Report metrics">
+        <div class="metric">
+          <span data-i18n="runs">Rulari</span><strong id="metricRuns">0</strong>
+        </div>
+        <div class="metric">
+          <span data-i18n="completed">Finalizate</span
+          ><strong id="metricCompleted">0</strong>
+        </div>
+        <div class="metric">
+          <span data-i18n="failed">Cu probleme</span
+          ><strong id="metricFailed">0</strong>
+        </div>
+        <div class="metric">
+          <span data-i18n="running">In lucru</span
+          ><strong id="metricRunning">0</strong>
+        </div>
+      </section>
+
+      <div class="layout">
+        <aside class="panel">
+          <div class="panel-head">
+            <h2 data-i18n="reportList">Rulari disponibile</h2>
+          </div>
+          <div id="reportList" class="report-list"></div>
+        </aside>
+
+        <section class="panel">
+          <div id="emptyDetail" class="empty">
+            <strong data-i18n="chooseRun">Selecteaza o rulare</strong>
+            <span data-i18n="chooseRunHint"
+              >Vei vedea jurnalul de executie, rezultatul pe schema si fisierele
+              ramase.</span
+            >
+          </div>
+          <div id="detail" class="panel-body detail hidden">
+            <div class="run-head">
+              <div>
+                <h2 id="detailTitle"></h2>
+                <div id="detailMeta" class="run-meta"></div>
+              </div>
+              <div class="spacer"></div>
+              <span id="detailStatus" class="status"></span>
+            </div>
+            <div id="detailNotice" class="notice"></div>
+            <div id="schemeGrid" class="scheme-grid"></div>
+
+            <div class="toolbar">
+              <div class="tabs">
+                <button id="tabTimeline" type="button" data-i18n="timeline">
+                  Jurnal
+                </button>
+                <button id="tabMaterials" type="button" data-i18n="materials">
+                  Materiale
+                </button>
+              </div>
+              <div class="spacer"></div>
+              <a
+                id="btnLog"
+                class="button compact"
+                href="#"
+                data-i18n="downloadLog"
+                >Descarca LOG</a
+              >
+              <a
+                id="btnCsv"
+                class="button compact"
+                href="#"
+                data-i18n="downloadCsv"
+                >Descarca raport CSV</a
+              >
+              <button
+                type="button"
+                id="btnDeleteOne"
+                class="button compact danger"
+                data-i18n="deleteOne"
+              >
+                Sterge raportul
+              </button>
+            </div>
+
+            <div id="timelinePanel" class="log-panel"></div>
+            <div id="materialsPanel" class="table-wrap hidden">
+              <table>
+                <thead>
+                  <tr>
+                    <th data-i18n="scheme">Schema</th>
+                    <th data-i18n="product">Material</th>
+                    <th data-i18n="hsCode">Cod HS</th>
+                    <th data-i18n="hsResult">Rezultat HS</th>
+                    <th data-i18n="descResult">Rezultat DE/EN</th>
+                    <th data-i18n="message">Mesaj confirmare</th>
+                  </tr>
+                </thead>
+                <tbody id="materialsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const LANG_KEY = "hs_ui_lang";
+      const I18N = {
+        ro: {
+          brand: "Rapoarte HS",
+          brandSub: "Jurnal cronologic pentru clasificare si descrieri",
+          backHs: "Inapoi la HS",
+          standalone: "Descrieri standalone",
+          title: "Istoric si rapoarte de executie",
+          subtitle:
+            "Ce a facut RPA pe fiecare schema: varianta, worklist, HS, descrieri si erori, in ordine cronologica.",
+          refresh: "Actualizeaza",
+          deleteOne: "Sterge raportul",
+          deleteAll: "Sterge toate rapoartele",
+          deleteOneConfirm:
+            "Sterg acest raport de pe disc? Actiunea nu poate fi anulata.",
+          deleteAllConfirm:
+            "Sterg TOATE rapoartele de pe disc? Actiunea nu poate fi anulata.",
+          deleteError: "Raportul nu a putut fi sters.",
+          runs: "Rulari",
+          completed: "Finalizate",
+          failed: "Cu probleme",
+          running: "In lucru",
+          reportList: "Rulari disponibile",
+          chooseRun: "Selecteaza o rulare",
+          chooseRunHint:
+            "Vei vedea jurnalul de executie, rezultatul pe schema si fisierele ramase.",
+          materials: "Materiale",
+          timeline: "Jurnal",
+          downloadLog: "Descarca LOG",
+          downloadCsv: "Descarca raport CSV",
+          scheme: "Schema",
+          product: "Material",
+          hsCode: "Cod HS",
+          hsResult: "Rezultat HS",
+          descResult: "Rezultat DE/EN",
+          message: "Mesaj confirmare",
+          noReports: "Nu exista rapoarte inca.",
+          noMaterials:
+            "Nu exista rezultate pe materiale pentru aceasta rulare.",
+          noEvents: "Nu exista evenimente.",
+          analysis: "Analiza",
+          classification: "Clasificare HS",
+          descriptions: "Descrieri DE/EN",
+          remaining: "Worklist ramas",
+          ready: "pregatite",
+          blocked: "blocate",
+          groups: "grupuri",
+          confirmed: "confirmate",
+          errors: "erori",
+          saved: "salvate",
+          notRun: "Neexecutat",
+          fullWorklist: "Niciun material eliminat (analiza/dry-run).",
+          downloadRemaining: "Descarca lista ramasa",
+          fileError: "Fisierul ramas nu a putut fi creat",
+          factualOk:
+            "Rularea s-a incheiat fara erori raportate de etapele structurate.",
+          factualFailed:
+            "Rularea este incompleta. Verifica schema blocata si mesajele de confirmare.",
+          factualWarning:
+            "Automatizarea s-a incheiat, dar fisierul de trasabilitate necesita atentie.",
+          factualRunning:
+            "Rularea este in curs; valorile si concluzia se pot modifica.",
+          factualInterrupted:
+            "Aplicatia a fost oprita sau repornita inainte ca rularea sa confirme finalizarea.",
+          technicalRaw: "Mesaj tehnic brut",
+          mode: "Mod",
+          system: "Sistem",
+          started: "Pornit",
+          finished: "Finalizat",
+          commit: "salvare",
+          dry_run: "dry-run",
+          download: "analiza worklist",
+          classify: "clasificare",
+          queue: "coada scheme",
+          completedStatus: "Finalizat",
+          failedStatus: "Eroare",
+          warningStatus: "Atentie",
+          runningStatus: "In lucru",
+          pendingStatus: "In asteptare",
+          analyzedStatus: "Analizat",
+          noDataStatus: "Fara date",
+          unknown: "Necunoscut",
+          committedOutcome: "confirmat in SAP",
+          confirmedOutcome: "confirmat",
+          failedOutcome: "eroare",
+          blockedOutcome: "blocat",
+          dryRunOutcome: "simulat",
+          skippedOutcome: "omis",
+          notFoundOutcome: "negasit",
+        },
+        en: {
+          brand: "HS Reports",
+          brandSub: "Chronological log for classification and descriptions",
+          backHs: "Back to HS",
+          standalone: "Standalone descriptions",
+          title: "Run history and reports",
+          subtitle:
+            "What RPA did per scheme: variant, worklist, HS, descriptions, and errors, in chronological order.",
+          refresh: "Refresh",
+          deleteOne: "Delete report",
+          deleteAll: "Delete all reports",
+          deleteOneConfirm:
+            "Delete this report from disk? This cannot be undone.",
+          deleteAllConfirm:
+            "Delete ALL reports from disk? This cannot be undone.",
+          deleteError: "The report could not be deleted.",
+          runs: "Runs",
+          completed: "Completed",
+          failed: "Issues",
+          running: "Running",
+          reportList: "Available runs",
+          chooseRun: "Select a run",
+          chooseRunHint:
+            "You will see the execution log, per-scheme results, and remaining files.",
+          materials: "Materials",
+          timeline: "Log",
+          downloadLog: "Download LOG",
+          downloadCsv: "Download CSV report",
+          scheme: "Scheme",
+          product: "Material",
+          hsCode: "HS code",
+          hsResult: "HS result",
+          descResult: "DE/EN result",
+          message: "Confirmation message",
+          noReports: "No reports yet.",
+          noMaterials: "This run has no material-level results.",
+          noEvents: "No events recorded.",
+          analysis: "Analysis",
+          classification: "HS classification",
+          descriptions: "DE/EN descriptions",
+          remaining: "Remaining worklist",
+          ready: "ready",
+          blocked: "blocked",
+          groups: "groups",
+          confirmed: "confirmed",
+          errors: "errors",
+          saved: "saved",
+          notRun: "Not run",
+          fullWorklist: "No material removed (analysis/dry run).",
+          downloadRemaining: "Download remaining list",
+          fileError: "The remaining file could not be created",
+          factualOk:
+            "The run completed without errors in the structured stages.",
+          factualFailed:
+            "The run is incomplete. Review the blocked scheme and confirmation messages.",
+          factualWarning:
+            "Automation completed, but a traceability artifact needs attention.",
+          factualRunning:
+            "The run is in progress; values and the conclusion may still change.",
+          factualInterrupted:
+            "The application stopped or restarted before the run confirmed completion.",
+          technicalRaw: "Raw technical message",
+          mode: "Mode",
+          system: "System",
+          started: "Started",
+          finished: "Finished",
+          commit: "commit",
+          dry_run: "dry run",
+          download: "worklist analysis",
+          classify: "classification",
+          queue: "scheme queue",
+          completedStatus: "Completed",
+          failedStatus: "Failed",
+          warningStatus: "Warning",
+          runningStatus: "Running",
+          pendingStatus: "Pending",
+          noDataStatus: "No data",
+          analyzedStatus: "Analyzed",
+          unknown: "Unknown",
+          committedOutcome: "committed",
+          confirmedOutcome: "confirmed",
+          failedOutcome: "failed",
+          blockedOutcome: "blocked",
+          dryRunOutcome: "dry run",
+          skippedOutcome: "skipped",
+          notFoundOutcome: "not found",
+        },
+      };
+      let lang = localStorage.getItem(LANG_KEY) === "en" ? "en" : "ro";
+      let reports = [];
+      let selectedReport = null;
+      let activeTab = "timeline";
+
+      function t(key) {
+        return I18N[lang][key] || I18N.ro[key] || key;
+      }
+      function esc(value) {
+        return String(value == null ? "" : value).replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[char],
+        );
+      }
+      function setLanguage(next) {
+        lang = next === "en" ? "en" : "ro";
+        localStorage.setItem(LANG_KEY, lang);
+        document.documentElement.lang = lang;
+        document.title =
+          lang === "en" ? "HS Reports - SAP GTS" : "Rapoarte HS - SAP GTS";
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          node.textContent = t(node.dataset.i18n);
+        });
+        $("langRo").classList.toggle("active", lang === "ro");
+        $("langEn").classList.toggle("active", lang === "en");
+        renderReports();
+        if (selectedReport) renderDetail(selectedReport);
+      }
+      $("langRo").onclick = () => setLanguage("ro");
+      $("langEn").onclick = () => setLanguage("en");
+
+      function statusLabel(status) {
+        const map = {
+          completed: "completedStatus",
+          failed: "failedStatus",
+          warning: "warningStatus",
+          running: "runningStatus",
+          pending: "pendingStatus",
+          analyzed: "analyzedStatus",
+          no_data: "noDataStatus",
+        };
+        return t(map[status] || "unknown");
+      }
+      function outcomeLabel(status) {
+        const normalized = String(status || "")
+          .toLowerCase()
+          .replace(/[_ -]+/g, "_");
+        const map = {
+          committed: "committedOutcome",
+          confirmed: "confirmedOutcome",
+          saved: "confirmedOutcome",
+          maintained: "confirmedOutcome",
+          failed: "failedOutcome",
+          error: "failedOutcome",
+          blocked: "blockedOutcome",
+          dry_run: "dryRunOutcome",
+          skipped: "skippedOutcome",
+          not_found: "notFoundOutcome",
+          not_run: "notRun",
+          pending: "pendingStatus",
+        };
+        return normalized ? t(map[normalized] || "unknown") : "-";
+      }
+      function formatDate(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime())
+          ? value
+          : new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "ro-RO", {
+              dateStyle: "medium",
+              timeStyle: "medium",
+            }).format(date);
+      }
+      function reportName(report) {
+        const schemes = (report.schemes || [])
+          .map((item) => item.scheme)
+          .filter(Boolean);
+        return schemes.length
+          ? schemes.join(", ")
+          : t(report.kind || "unknown");
+      }
+      function updateMetrics() {
+        $("metricRuns").textContent = reports.length;
+        $("metricCompleted").textContent = reports.filter(
+          (item) => item.status === "completed",
+        ).length;
+        $("metricFailed").textContent = reports.filter(
+          (item) => item.status === "failed" || item.status === "warning",
+        ).length;
+        $("metricRunning").textContent = reports.filter(
+          (item) => item.status === "running",
+        ).length;
+      }
+      function renderReports() {
+        updateMetrics();
+        const box = $("reportList");
+        if (!reports.length) {
+          box.innerHTML = `<div class="empty">${esc(t("noReports"))}</div>`;
+          return;
+        }
+        box.innerHTML = reports
+          .map(
+            (
+              report,
+            ) => `<button type="button" class="report-item ${selectedReport && selectedReport.id === report.id ? "active" : ""}" data-report="${esc(report.id)}">
+          <div class="report-item-top"><strong>${esc(reportName(report))}</strong><span class="spacer"></span><span class="status ${esc(report.status)}">${esc(statusLabel(report.status))}</span></div>
+          <small>${esc(t(report.kind || "unknown"))} · ${esc(report.system || "-")} · ${esc(formatDate(report.created_at))}</small>
+        </button>`,
+          )
+          .join("");
+        box.querySelectorAll("[data-report]").forEach((button) => {
+          button.onclick = () => loadDetail(button.dataset.report);
+        });
+      }
+
+      async function loadReports() {
+        const response = await fetch("/hs/reports?limit=200");
+        const data = await response.json();
+        reports = data.reports || [];
+        renderReports();
+        const wanted = new URLSearchParams(location.search).get("report");
+        if (wanted && (!selectedReport || selectedReport.id !== wanted))
+          await loadDetail(wanted);
+      }
+      async function loadDetail(id) {
+        const response = await fetch(`/hs/reports/${encodeURIComponent(id)}`);
+        if (!response.ok) return;
+        selectedReport = await response.json();
+        const url = new URL(location.href);
+        url.searchParams.set("report", id);
+        history.replaceState({}, "", url);
+        renderReports();
+        renderDetail(selectedReport);
+      }
+
+      function metricText(value, suffix) {
+        return `${Number(value || 0)} ${t(suffix)}`;
+      }
+      function renderSchemes(report) {
+        const grid = $("schemeGrid");
+        grid.innerHTML = (report.schemes || [])
+          .map((scheme) => {
+            const analysis = scheme.analysis || {};
+            const classification = scheme.classification || {};
+            const descriptions = scheme.descriptions || {};
+            const remaining = scheme.remaining_worklist;
+            const hsMain = scheme.classification
+              ? metricText(classification.materials_committed, "confirmed")
+              : t("notRun");
+            const hsSub = scheme.classification
+              ? `${metricText(classification.materials_failed, "errors")} · ${metricText(classification.groups, "groups")}`
+              : "";
+            const descMain = scheme.descriptions
+              ? `${Number(descriptions.saved || 0)}/${Number(descriptions.total || 0)} ${t("saved")}`
+              : t("notRun");
+            const descErrors =
+              Number(descriptions.failed || 0) +
+              Number(descriptions.not_found || 0);
+            let remainingHtml = `<span>${esc(t("notRun"))}</span>`;
+            if (remaining && remaining.ok) {
+              remainingHtml = `<span>${Number(remaining.remaining_products || 0)} ${esc(t("product"))}</span><small>${Number(remaining.removed_products || 0)} ${esc(t("confirmed"))}</small>${remaining.warning ? `<small class="status warning">${esc(remaining.warning)}</small>` : ""}<a class="button compact" href="${esc(remaining.url)}">${esc(t("downloadRemaining"))}</a>`;
+            } else if (remaining) {
+              remainingHtml = `<span class="status failed">${esc(t("fileError"))}</span><small>${esc(remaining.error || "")}</small>`;
+            }
+            return `<article class="scheme-card">
+            <div class="scheme-head"><code>${esc(scheme.scheme || "-")}</code><span class="status ${esc(scheme.status || "pending")}">${esc(statusLabel(scheme.status || "pending"))}</span><span class="spacer"></span><small>${esc(scheme.source_file || "")}</small></div>
+            ${scheme.error ? `<div class="notice error">${esc(scheme.error)}</div>` : ""}
+            <div class="scheme-facts">
+              <div class="fact"><b>${esc(t("analysis"))}</b><span>${metricText(analysis.ready, "ready")}</span><small>${metricText(analysis.blocked, "blocked")} · ${metricText(analysis.groups, "groups")}</small></div>
+              <div class="fact"><b>${esc(t("classification"))}</b><span>${esc(hsMain)}</span><small>${esc(hsSub)}</small></div>
+              <div class="fact"><b>${esc(t("descriptions"))}</b><span>${esc(descMain)}</span><small>${descErrors} ${esc(t("errors"))}</small></div>
+              <div class="fact"><b>${esc(t("remaining"))}</b>${remainingHtml}</div>
+            </div>
+          </article>`;
+          })
+          .join("");
+      }
+
+      function renderMaterials(report) {
+        const body = $("materialsBody");
+        const materials = report.materials || [];
+        const descriptionsOnly = Boolean(
+          (report.summary || {}).descriptions_only,
+        );
+        if (!materials.length) {
+          body.innerHTML = `<tr><td colspan="6">${esc(t("noMaterials"))}</td></tr>`;
+          return;
+        }
+        body.innerHTML = materials
+          .map((item) => {
+            const messages = [item.hs_message, item.description_message]
+              .filter(Boolean)
+              .join(" · ");
+            const hsStatus =
+              descriptionsOnly && item.hs_status === "pending"
+                ? "not_run"
+                : item.hs_status;
+            return `<tr><td><code>${esc(item.scheme)}</code></td><td><b>${esc(item.product)}</b></td><td>${esc(item.hs_code)}</td>
+            <td><span class="status ${esc(hsStatus)}">${esc(outcomeLabel(hsStatus))}</span></td>
+            <td><span class="status ${esc(item.description_status)}">${esc(outcomeLabel(item.description_status))}</span></td>
+            <td class="message">${esc(messages || "-")}</td></tr>`;
+          })
+          .join("");
+      }
+      function eventLabel(type) {
+        const labels = {
+          "queue-start": lang === "en" ? "Queue started" : "Coada pornita",
+          "scheme-start": lang === "en" ? "Scheme started" : "Schema pornita",
+          analysis: t("analysis"),
+          "scheme-analysis": t("analysis"),
+          "group-start": lang === "en" ? "HS group" : "Grup HS",
+          "group-end": lang === "en" ? "HS confirmation" : "Confirmare HS",
+          "description-preflight":
+            lang === "en" ? "Description preflight" : "Precontrol descrieri",
+          "description-start": t("descriptions"),
+          "description-item-end":
+            lang === "en" ? "Description confirmation" : "Confirmare descriere",
+          "description-end": t("descriptions"),
+          "remaining-worklist": t("remaining"),
+          "scheme-end":
+            lang === "en" ? "Scheme completed" : "Schema finalizata",
+          "job-end": lang === "en" ? "Run completed" : "Rulare finalizata",
+          "queue-end": lang === "en" ? "Queue completed" : "Coada finalizata",
+          interrupted: lang === "en" ? "Run interrupted" : "Rulare intrerupta",
+          fatal: lang === "en" ? "Fatal error" : "Eroare fatala",
+          log: t("technicalRaw"),
+          step: lang === "en" ? "Automation step" : "Pas automatizare",
+        };
+        return labels[type] || type;
+      }
+      function renderTimeline(report) {
+        const panel = $("timelinePanel");
+        const entries =
+          report.log && report.log.length ? report.log : report.events || [];
+        if (!entries.length) {
+          panel.innerHTML = `<div class="empty">${esc(t("noEvents"))}</div>`;
+          return;
+        }
+        panel.innerHTML = entries
+          .map((entry) => {
+            const level =
+              entry.level === "error" || entry.type === "fatal"
+                ? "error"
+                : entry.level === "warn" || entry.level === "warning"
+                  ? "warn"
+                  : "";
+            const stamp = formatDate(entry.timestamp).split(", ").pop();
+            const scheme = entry.scheme ? `[${entry.scheme}] ` : "";
+            const text = entry.text || entry.message || eventLabel(entry.type);
+            return `<div class="log-line ${level}"><span class="log-stamp">${esc(stamp)}</span>${esc(scheme)}${esc(text || "-")}</div>`;
+          })
+          .join("");
+      }
+      function renderDetail(report) {
+        $("emptyDetail").classList.add("hidden");
+        $("detail").classList.remove("hidden");
+        $("detailTitle").textContent = reportName(report);
+        $("detailMeta").textContent =
+          `${t("system")}: ${report.system || "-"} · ${t("mode")}: ${t(report.mode || "dry_run")} · ${t("started")}: ${formatDate(report.created_at)} · ${t("finished")}: ${formatDate(report.finished_at)}`;
+        $("detailStatus").className = `status ${report.status}`;
+        $("detailStatus").textContent = statusLabel(report.status);
+        const notice = $("detailNotice");
+        notice.className =
+          "notice" + (report.status === "failed" ? " error" : "");
+        notice.textContent =
+          (report.interrupted ? t("factualInterrupted") : report.error) ||
+          (report.status === "failed"
+            ? t("factualFailed")
+            : report.status === "warning"
+              ? t("factualWarning")
+              : report.status === "running"
+                ? t("factualRunning")
+                : t("factualOk"));
+        renderSchemes(report);
+        renderMaterials(report);
+        renderTimeline(report);
+        $("btnCsv").href =
+          `/hs/reports/${encodeURIComponent(report.id)}/materials.csv`;
+        showTab(activeTab);
+      }
+      function showTab(tab) {
+        activeTab = tab === "timeline" ? "timeline" : "materials";
+        async function deleteJson(url) {
+          const response = await fetch(url, { method: "DELETE" });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || t("deleteError"));
+          return data;
+          $("btnLog").href =
+            `/hs/reports/${encodeURIComponent(report.id)}/log.txt`;
+        }
+        $("btnDeleteOne").onclick = async () => {
+          if (!selectedReport) return;
+          if (!confirm(t("deleteOneConfirm"))) return;
+          try {
+            await deleteJson(
+              `/hs/reports/${encodeURIComponent(selectedReport.id)}`,
+            );
+            selectedReport = null;
+            const url = new URL(location.href);
+            url.searchParams.delete("report");
+            history.replaceState({}, "", url);
+            $("detail").classList.add("hidden");
+            $("emptyDetail").classList.remove("hidden");
+            await loadReports();
+          } catch (error) {
+            alert(error.message || t("deleteError"));
+          }
+        };
+        $("btnDeleteAll").onclick = async () => {
+          if (!confirm(t("deleteAllConfirm"))) return;
+          try {
+            await deleteJson("/hs/reports");
+            selectedReport = null;
+            const url = new URL(location.href);
+            url.searchParams.delete("report");
+            history.replaceState({}, "", url);
+            $("detail").classList.add("hidden");
+            $("emptyDetail").classList.remove("hidden");
+            await loadReports();
+          } catch (error) {
+            alert(error.message || t("deleteError"));
+          }
+        };
+        $("tabMaterials").classList.toggle("active", activeTab === "materials");
+        $("tabTimeline").classList.toggle("active", activeTab === "timeline");
+        $("materialsPanel").classList.toggle(
+          "hidden",
+          activeTab !== "materials",
+        );
+        $("timelinePanel").classList.toggle("hidden", activeTab !== "timeline");
+      }
+      $("tabMaterials").onclick = () => showTab("materials");
+      $("tabTimeline").onclick = () => showTab("timeline");
+      $("btnRefresh").onclick = async () => {
+        await loadReports();
+        if (selectedReport) await loadDetail(selectedReport.id);
+      };
+
+      setLanguage(lang);
+      loadReports();
+      setInterval(async () => {
+        if (!selectedReport || selectedReport.status === "running") {
+          await loadReports();
+          if (selectedReport) await loadDetail(selectedReport.id);
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>

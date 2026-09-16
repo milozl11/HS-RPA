@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAP GTS - Customs Description Uploader</title>
+    <link rel="stylesheet" href="/static/app.css" />
+    <style>
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: auto;
+        height: auto;
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        letter-spacing: normal;
+      }
+
+      code {
+        border-radius: 5px;
+        padding: 2px 6px;
+        background: #eef3f9;
+        color: #28476d;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .page-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: end;
+        margin-bottom: 14px;
+      }
+
+      .page-title {
+        margin: 0;
+        color: var(--ink);
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .page-kicker {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status-strip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(420px, 520px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .workspace > .card {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .workspace > .stack {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .stack {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .stack .field-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stack .field-grid.compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stack .upload-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .stack .upload-panel button {
+        width: 100%;
+      }
+
+      .card {
+        overflow: hidden;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .field-grid.compact {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .action-row {
+        display: flex;
+        align-items: end;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .run-controls {
+        display: grid;
+        grid-template-columns: minmax(120px, 150px) minmax(190px, 1fr);
+        gap: 12px;
+        align-items: end;
+      }
+
+      .workspace > .card.run-card .run-actions {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .workspace > .card.run-card .run-actions button {
+        width: 100%;
+      }
+
+      .workspace > .card.run-card .progress,
+      .workspace > .card.run-card .log-head,
+      .workspace > .card.run-card #log {
+        width: 100%;
+      }
+
+      .check-tile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 36px;
+        padding: 7px 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 7px;
+        background: var(--surface);
+        color: var(--muted-strong);
+        font-weight: 650;
+      }
+
+      .config-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .config-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 132px;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .config-grid .span-all {
+        grid-column: 1 / -1;
+      }
+
+      .setting-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-soft);
+      }
+
+      .setting-row label {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .language-config {
+        display: grid;
+        gap: 8px;
+      }
+
+      .language-row {
+        display: grid;
+        grid-template-columns: minmax(142px, 0.9fr) 74px minmax(0, 1.35fr) 88px;
+        gap: 10px;
+        align-items: end;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfdff;
+      }
+
+      .language-toggle {
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+      }
+
+      .language-toggle label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .language-row input[type="text"] {
+        min-height: 34px;
+      }
+
+      .save-bar {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 2px;
+      }
+
+      .save-bar button {
+        min-width: 170px;
+      }
+
+      .upload-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-soft);
+      }
+
+      .upload-panel input[type="file"] {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .run-card .card-body {
+        display: grid;
+        gap: 16px;
+      }
+
+      .run-card .card-body > * {
+        min-width: 0;
+      }
+
+      .run-card .run-controls {
+        display: grid;
+        grid-template-columns: minmax(120px, 150px) minmax(190px, 1fr);
+        gap: 12px;
+        align-items: end;
+      }
+
+      .run-card .run-actions {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .run-card .run-actions button {
+        width: 100%;
+        min-height: 40px;
+      }
+
+      .run-card .stats,
+      .run-card .progress,
+      .run-card .log-head {
+        margin-top: 0;
+      }
+
+      .run-card #log {
+        height: clamp(260px, 36vh, 420px);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(84px, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .stat {
+        min-width: 0;
+        min-height: 68px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-soft);
+        padding: 10px;
+      }
+
+      .stat b {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--ink);
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .progress {
+        height: 10px;
+        margin-top: 10px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface-strong);
+      }
+
+      #progressBar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--primary), var(--success));
+        transition: width 0.25s ease;
+      }
+
+      .log-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 10px;
+        margin-bottom: 8px;
+      }
+
+      #log {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        height: 330px;
+        overflow-y: auto;
+        border: 1px solid #1f2937;
+        border-radius: 8px;
+        background: #101828;
+        color: #dbe4ee;
+        padding: 12px;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .l {
+        padding: 3px 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .l.info {
+        color: #9cc9ff;
+      }
+
+      .l.step {
+        color: #c7d2fe;
+      }
+
+      .l.ok {
+        color: #8ee8be;
+      }
+
+      .l.err {
+        color: #ffb4b4;
+      }
+
+      .l.warn {
+        color: #ffd88a;
+      }
+
+      .upload-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-soft);
+      }
+
+      .scroll {
+        max-height: 270px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      th,
+      td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--surface-strong);
+        color: var(--muted-strong);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      tr:hover td {
+        background: #fbfdff;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(15, 23, 42, 0.48);
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-box {
+        width: min(460px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: 0 28px 70px rgba(15, 23, 42, 0.22);
+      }
+
+      .modal-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface-soft);
+      }
+
+      .modal-title {
+        margin: 0;
+        color: var(--ink);
+        font-size: 16px;
+      }
+
+      .modal-body {
+        padding: 18px 20px;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 20px;
+        border-top: 1px solid var(--line);
+        background: var(--surface-soft);
+      }
+
+      .helper {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .section-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .page-kicker,
+      .section-note[data-i18n] {
+        display: none;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 920px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .workspace > .card,
+        .workspace > .stack {
+          grid-column: auto;
+          grid-row: auto;
+        }
+
+        .stack {
+          grid-template-columns: 1fr;
+        }
+
+        .workspace > .card > .card-body {
+          display: block;
+        }
+
+        .workspace > .card .stats {
+          margin-top: 16px;
+        }
+
+        .workspace > .card.run-card .run-controls,
+        .run-card .run-controls {
+          grid-template-columns: 140px minmax(190px, 1fr);
+        }
+
+        .workspace > .card.run-card .run-actions,
+        .run-card .run-actions {
+          grid-column: 1 / -1;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .workspace > .card .progress {
+          margin-top: 14px;
+        }
+
+        .workspace > .card #log {
+          height: 330px;
+        }
+
+        .run-controls {
+          grid-template-columns: 140px minmax(190px, 1fr);
+        }
+
+        .run-actions {
+          grid-column: 1 / -1;
+        }
+
+        .language-row {
+          grid-template-columns: minmax(150px, 1fr) 76px minmax(0, 1.3fr) 92px;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .topbar {
+          position: static;
+          align-items: flex-start;
+          padding: 12px;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .brand {
+          min-width: 0;
+          flex: 1 1 100%;
+        }
+
+        .toolbar {
+          flex: 1 1 100%;
+          display: grid;
+          grid-template-columns: minmax(150px, 1fr) minmax(98px, auto) minmax(
+              74px,
+              auto
+            );
+          gap: 8px;
+          align-items: center;
+        }
+
+        .lang-toggle {
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .toolbar > * {
+          min-width: 0;
+        }
+
+        .toolbar button,
+        .toolbar .badge {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .page-header {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .status-strip {
+          display: grid;
+          grid-template-columns: minmax(150px, 1fr) minmax(120px, auto) minmax(
+              108px,
+              auto
+            );
+          gap: 8px;
+          align-items: stretch;
+          justify-content: stretch;
+        }
+
+        .status-strip .pill,
+        .status-strip button {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .upload-panel,
+        .action-row {
+          display: grid;
+          grid-template-columns: 1fr;
+          align-items: stretch;
+        }
+
+        main {
+          width: min(100% - 24px, 1240px);
+          margin-top: 16px;
+        }
+
+        .field-grid,
+        .field-grid.compact,
+        .config-grid,
+        .language-row,
+        .run-controls,
+        .stats {
+          grid-template-columns: 1fr;
+        }
+
+        .workspace > .card.run-card .run-controls,
+        .workspace > .card.run-card .run-actions,
+        .run-card .run-controls,
+        .run-card .run-actions {
+          grid-template-columns: 1fr;
+        }
+
+        .language-toggle {
+          min-height: 34px;
+        }
+
+        .save-bar {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .save-bar button {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .upload-panel button,
+        .action-row button,
+        .run-actions button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      @media (max-width: 430px) {
+        .toolbar,
+        .status-strip {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="fixed-shell">
+    <div class="app-shell">
+      <div id="credModal" class="modal" aria-hidden="true">
+        <div
+          class="modal-box"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="credTitle"
+        >
+          <div class="modal-header">
+            <h2 id="credTitle" class="modal-title" data-i18n="credentialsTitle">
+              SAP credentials
+            </h2>
+          </div>
+          <div class="modal-body">
+            <p class="helper" data-i18n="credentialsHelp">
+              Used for SSO/Basic auth and SAP form login. Stored only in this
+              browser session.
+            </p>
+            <div class="stack">
+              <div>
+                <label for="credUser" data-i18n="username">Username</label>
+                <input id="credUser" type="text" autocomplete="username" />
+              </div>
+              <div>
+                <label for="credPass" data-i18n="password">Password</label>
+                <input
+                  id="credPass"
+                  type="password"
+                  autocomplete="current-password"
+                />
+              </div>
+              <label class="check-tile" for="credRemember">
+                <input id="credRemember" type="checkbox" checked />
+                <span data-i18n="rememberSession"
+                  >Remember for this session</span
+                >
+              </label>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="ghost" id="credCancel" data-i18n="cancel">
+              Cancel
+            </button>
+            <button id="credSave" data-i18n="save">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">GTS</div>
+          <div>
+            <h1 class="brand-title" data-i18n="appName">
+              Customs Description Uploader
+            </h1>
+            <div class="brand-subtitle" data-i18n="appSubtitle">
+              SAP GTS automation - local server
+            </div>
+          </div>
+        </div>
+        <div class="topbar-spacer"></div>
+        <div class="toolbar">
+          <div class="lang-toggle" aria-label="Language">
+            <button id="langRo" type="button">RO</button>
+            <button id="langEn" type="button">EN</button>
+          </div>
+          <button
+            class="ghost compact"
+            id="btnEditCreds"
+            data-i18n="credentialsButton"
+          >
+            Credentials
+          </button>
+          <span id="envBadge" class="badge test">TEST</span>
+        </div>
+      </header>
+
+      <main>
+        <div class="page-header">
+          <div>
+            <h2 class="page-title" data-i18n="pageTitle">
+              SAP GTS material description upload
+            </h2>
+            <p class="page-kicker" data-i18n="pageSubtitle">
+              Configure the source, preview Excel rows, then run the SAP upload
+              job.
+            </p>
+          </div>
+          <div class="status-strip">
+            <span id="sessStatus" class="pill"
+              ><span class="dot"></span><span>Browser stopped</span></span
+            >
+            <button
+              id="btnSessionStop"
+              class="ghost compact"
+              disabled
+              data-i18n="closeBrowser"
+            >
+              Close browser
+            </button>
+            <button
+              id="btnReset"
+              class="ghost compact"
+              data-i18n="resetBrowser"
+            >
+              Reset browser
+            </button>
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="stack">
+            <section class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-index">1</span
+                  ><span data-i18n="configTitle">Configuration</span>
+                </h3>
+                <p class="section-note" data-i18n="configNote">
+                  SAP target and Excel column mapping
+                </p>
+              </div>
+              <div class="card-body config-form">
+                <div class="config-grid">
+                  <div class="span-all">
+                    <label for="cfgUrl" data-i18n="sapUrl">SAP Fiori URL</label>
+                    <input id="cfgUrl" type="text" />
+                  </div>
+                  <div>
+                    <label for="cfgLabel" data-i18n="envLabel"
+                      >Environment label</label
+                    >
+                    <input id="cfgLabel" type="text" />
+                  </div>
+                  <div>
+                    <label for="cfgMatCol" data-i18n="materialColumn"
+                      >Material column</label
+                    >
+                    <input id="cfgMatCol" type="text" value="B" />
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <label>
+                    <input id="cfgDisplayMaintained" type="checkbox" checked />
+                    <span data-i18n="displayMaintained"
+                      >Show already maintained materials</span
+                    >
+                  </label>
+                </div>
+                <div class="language-config">
+                  <div class="language-row">
+                    <div class="language-toggle">
+                      <label>
+                        <input id="cfgLangDeOn" type="checkbox" checked />
+                        <span data-i18n="maintainDe">Maintain German</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label for="cfgLangDeCode" data-i18n="languageCode"
+                        >Language</label
+                      >
+                      <input id="cfgLangDeCode" type="text" value="DE" />
+                    </div>
+                    <div>
+                      <label for="cfgLangDeCountry" data-i18n="sapCountry"
+                        >SAP Country</label
+                      >
+                      <input
+                        id="cfgLangDeCountry"
+                        type="text"
+                        value="Germany"
+                      />
+                    </div>
+                    <div>
+                      <label for="cfgLangDeCol" data-i18n="descriptionColumn"
+                        >Description column</label
+                      >
+                      <input id="cfgLangDeCol" type="text" value="J" />
+                    </div>
+                  </div>
+                  <div class="language-row">
+                    <div class="language-toggle">
+                      <label>
+                        <input id="cfgLangEnOn" type="checkbox" />
+                        <span data-i18n="maintainEn">Maintain English</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label for="cfgLangEnCode" data-i18n="languageCode"
+                        >Language</label
+                      >
+                      <input id="cfgLangEnCode" type="text" value="EN" />
+                    </div>
+                    <div>
+                      <label for="cfgLangEnCountry" data-i18n="sapCountry"
+                        >SAP Country</label
+                      >
+                      <input
+                        id="cfgLangEnCountry"
+                        type="text"
+                        value="United Kingdom"
+                      />
+                    </div>
+                    <div>
+                      <label for="cfgLangEnCol" data-i18n="descriptionColumn"
+                        >Description column</label
+                      >
+                      <input id="cfgLangEnCol" type="text" value="K" />
+                    </div>
+                  </div>
+                </div>
+                <div class="save-bar">
+                  <button id="btnSaveCfg" data-i18n="saveConfiguration">
+                    Save configuration
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-index">2</span
+                  ><span data-i18n="uploadTitle">Excel upload</span>
+                </h3>
+                <p class="section-note">
+                  <span data-i18n="formatLabel">Format</span>: <code>B</code> =
+                  <span data-i18n="materialLower">material</span>,
+                  <code>J</code> =
+                  <span data-i18n="descriptionLower">description</span>
+                </p>
+              </div>
+              <div class="card-body">
+                <div class="upload-panel">
+                  <input id="file" type="file" accept=".xlsx,.xlsm" />
+                  <button id="btnPreview" data-i18n="previewFile">
+                    Read and preview
+                  </button>
+                </div>
+                <div id="previewBox" style="margin-top: 14px"></div>
+              </div>
+            </section>
+          </div>
+
+          <section class="card run-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="step-index">3</span
+                ><span data-i18n="runTitle">Run job</span>
+              </h3>
+              <p class="section-note" data-i18n="runNote">
+                Start small, then run full batches headless.
+              </p>
+            </div>
+            <div class="card-body">
+              <div class="run-controls">
+                <div>
+                  <label for="runLimit" data-i18n="limitLabel">Limit</label>
+                  <input id="runLimit" type="number" value="3" min="0" />
+                </div>
+                <label
+                  class="check-tile"
+                  for="runHeadless"
+                  data-i18n-title="headlessTitle"
+                >
+                  <input id="runHeadless" type="checkbox" />
+                  <span data-i18n="headlessLabel">Run headless</span>
+                </label>
+                <div class="action-row run-actions">
+                  <button
+                    id="btnRun"
+                    class="success"
+                    disabled
+                    data-i18n="startJob"
+                  >
+                    Start job
+                  </button>
+                  <button
+                    id="btnStop"
+                    class="danger"
+                    disabled
+                    data-i18n="stopJob"
+                  >
+                    Stop job
+                  </button>
+                  <button
+                    id="btnReport"
+                    class="ghost"
+                    disabled
+                    data-i18n="downloadCsv"
+                  >
+                    Download CSV
+                  </button>
+                </div>
+              </div>
+
+              <div class="stats">
+                <div class="stat">
+                  <b id="statTotal">0</b><span data-i18n="total">Total</span>
+                </div>
+                <div class="stat">
+                  <b id="statDone" style="color: var(--primary)">0</b
+                  ><span data-i18n="processed">Processed</span>
+                </div>
+                <div class="stat">
+                  <b id="statOk" style="color: var(--success)">0</b
+                  ><span data-i18n="ok">OK</span>
+                </div>
+                <div class="stat">
+                  <b id="statNF" style="color: var(--warning)">0</b
+                  ><span data-i18n="notFound">Not found</span>
+                </div>
+                <div class="stat">
+                  <b id="statErr" style="color: var(--danger)">0</b
+                  ><span data-i18n="errors">Errors</span>
+                </div>
+              </div>
+
+              <div class="progress"><div id="progressBar"></div></div>
+
+              <div class="log-head">
+                <label style="margin: 0" data-i18n="activityLog"
+                  >Activity log</label
+                >
+                <span class="pill"
+                  ><span class="dot ok"></span
+                  ><span data-i18n="liveUpdates">Live updates</span></span
+                >
+              </div>
+              <div id="log"></div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let parsedItems = [];
+      let currentJob = null;
+      let jobES = null;
+      let currentLang = localStorage.getItem("app_lang") || "ro";
+
+      const I18N = {
+        ro: {
+          documentTitle: "SAP GTS - Incarcare descrieri vamale",
+          appName: "Incarcare descrieri vamale",
+          appSubtitle: "Automatizare SAP GTS - server local",
+          credentialsButton: "Credentiale",
+          pageTitle: "Incarcare descrieri materiale in SAP GTS",
+          pageSubtitle:
+            "Configureaza sursa, previzualizeaza randurile Excel, apoi ruleaza incarcarea in SAP.",
+          credentialsTitle: "Credentiale SAP",
+          credentialsHelp:
+            "Folosite pentru SSO/Basic auth si formularul SAP. Sunt pastrate doar in sesiunea acestui browser.",
+          username: "Utilizator",
+          password: "Parola",
+          rememberSession: "Tine minte pentru sesiune",
+          cancel: "Anuleaza",
+          save: "Salveaza",
+          closeBrowser: "Inchide browser",
+          resetBrowser: "Reset browser",
+          configTitle: "Configurare",
+          configNote: "Tinta SAP si maparea coloanelor Excel",
+          sapUrl: "URL SAP Fiori",
+          envLabel: "Eticheta mediu",
+          materialColumn: "Coloana material",
+          descriptionColumn: "Coloana descriere",
+          countryCode: "Cod tara",
+          languageCode: "Limba",
+          maintainDe: "Mentine germana",
+          maintainEn: "Mentine engleza",
+          sapCountry: "Tara SAP",
+          displayMaintained: "Afiseaza si materialele deja mentinute",
+          noLangSelected: "Selecteaza cel putin o limba (DE sau EN).",
+          oneLangOnly: "Poti mentine DE si EN in aceeasi rulare.",
+          saveConfiguration: "Salveaza configurarea",
+          uploadTitle: "Incarcare Excel",
+          formatLabel: "Format",
+          materialLower: "material",
+          descriptionLower: "descriere",
+          previewFile: "Citeste si previzualizeaza",
+          runTitle: "Rulare job",
+          runNote:
+            "Testeaza cu limita mica, apoi ruleaza volume mari headless.",
+          limitLabel: "Limita (0 = toate)",
+          headlessLabel: "Ruleaza ascuns",
+          headlessTitle: "Recomandat pentru volume mari de date",
+          startJob: "Porneste job",
+          stopJob: "Opreste job",
+          downloadCsv: "Descarca CSV",
+          total: "Total",
+          processed: "Procesate",
+          ok: "OK",
+          notFound: "Negasite",
+          errors: "Erori",
+          activityLog: "Jurnal activitate",
+          liveUpdates: "Actualizari live",
+          browserStopped: "Browser oprit",
+          browserStarting: "Pornesc browser",
+          browserReady: "Browser activ",
+          browserBusy: "Procesez materiale",
+          browserError: "Eroare browser",
+          browserStopping: "Inchidere browser",
+          envProd: "PRODUCTIV",
+          noFile: "Selecteaza un fisier Excel.",
+          readingFile: "Se citeste fisierul...",
+          rowsValid: "randuri valide",
+          fileLabel: "Fisier",
+          row: "Rand",
+          material: "Material",
+          description: "Descriere",
+          configSaved: "Configurare salvata.",
+          confirmEmptyCreds: "Lasi credentialele goale?",
+          confirmNoCreds:
+            "Nu ai introdus credentiale. Continui doar cu SSO/Kerberos?",
+          confirmProd: "ATENTIE: mediu PRODUCTIV. Continui?",
+          confirmCloseBrowser: "Inchid browserul SAP?",
+          confirmReset: "Inchid TOATE ferestrele Chromium si sterg lock-urile?",
+          browserClosed: "Browser inchis.",
+          cleanupDone: "Curatat: {pids} procese, {locks} lock-uri.",
+          sendJob:
+            "Se trimite job-ul. Browserul porneste daca nu este deja deschis...",
+          jobStarted: "Job pornit: {job} ({total} materiale)",
+          jobStartTotal: "Job-start total={total}",
+          itemOk: "{material} OK",
+          itemNotFound: "{material} NEGASIT",
+          itemError: "{material} EROARE: {msg}",
+          jobFinished:
+            "Job terminat. OK={ok} Negasite={notFound} Erori={fail} Skipped={skipped}",
+          stopSent: "Cerere de oprire trimisa.",
+          sapReady: "Browser SAP gata, incep job-ul.",
+          loadFirst: "Incarca un fisier Excel mai intai.",
+          errorPrefix: "Eroare",
+          fatalPrefix: "FATAL",
+          browserPrefix: "browser",
+        },
+        en: {
+          documentTitle: "SAP GTS - Customs Description Uploader",
+          appName: "Customs Description Uploader",
+          appSubtitle: "SAP GTS automation - local server",
+          credentialsButton: "Credentials",
+          pageTitle: "SAP GTS material description upload",
+          pageSubtitle:
+            "Configure the source, preview Excel rows, then run the SAP upload job.",
+          credentialsTitle: "SAP credentials",
+          credentialsHelp:
+            "Used for SSO/Basic auth and SAP form login. Stored only in this browser session.",
+          username: "Username",
+          password: "Password",
+          rememberSession: "Remember for this session",
+          cancel: "Cancel",
+          save: "Save",
+          closeBrowser: "Close browser",
+          resetBrowser: "Reset browser",
+          configTitle: "Configuration",
+          configNote: "SAP target and Excel column mapping",
+          sapUrl: "SAP Fiori URL",
+          envLabel: "Environment label",
+          materialColumn: "Material column",
+          descriptionColumn: "Description column",
+          countryCode: "Country code",
+          languageCode: "Language",
+          maintainDe: "Maintain German",
+          maintainEn: "Maintain English",
+          sapCountry: "SAP Country",
+          displayMaintained: "Show already maintained materials",
+          noLangSelected: "Select at least one language (DE or EN).",
+          oneLangOnly: "DE and EN can be maintained in the same run.",
+          saveConfiguration: "Save configuration",
+          uploadTitle: "Excel upload",
+          formatLabel: "Format",
+          materialLower: "material",
+          descriptionLower: "description",
+          previewFile: "Read and preview",
+          runTitle: "Run job",
+          runNote: "Start small, then run full batches headless.",
+          limitLabel: "Limit (0 = all)",
+          headlessLabel: "Run headless",
+          headlessTitle: "Recommended for large data volumes",
+          startJob: "Start job",
+          stopJob: "Stop job",
+          downloadCsv: "Download CSV",
+          total: "Total",
+          processed: "Processed",
+          ok: "OK",
+          notFound: "Not found",
+          errors: "Errors",
+          activityLog: "Activity log",
+          liveUpdates: "Live updates",
+          browserStopped: "Browser stopped",
+          browserStarting: "Starting browser",
+          browserReady: "Browser active",
+          browserBusy: "Processing materials",
+          browserError: "Browser error",
+          browserStopping: "Closing browser",
+          envProd: "PRODUCTION",
+          noFile: "Select an Excel file first.",
+          readingFile: "Reading file...",
+          rowsValid: "valid rows",
+          fileLabel: "File",
+          row: "Row",
+          material: "Material",
+          description: "Description",
+          configSaved: "Configuration saved.",
+          confirmEmptyCreds: "Leave credentials empty?",
+          confirmNoCreds:
+            "No credentials were entered. Continue with SSO/Kerberos only?",
+          confirmProd: "WARNING: production environment. Continue?",
+          confirmCloseBrowser: "Close the SAP browser?",
+          confirmReset: "Close ALL Chromium windows and remove lock files?",
+          browserClosed: "Browser closed.",
+          cleanupDone: "Cleaned: {pids} processes, {locks} locks.",
+          sendJob:
+            "Submitting job. The browser starts automatically if it is not already open...",
+          jobStarted: "Job started: {job} ({total} materials)",
+          jobStartTotal: "Job start total={total}",
+          itemOk: "{material} OK",
+          itemNotFound: "{material} NOT FOUND",
+          itemError: "{material} ERROR: {msg}",
+          jobFinished:
+            "Job finished. OK={ok} Not found={notFound} Errors={fail} Skipped={skipped}",
+          stopSent: "Stop request sent.",
+          sapReady: "SAP browser ready, starting the job.",
+          loadFirst: "Upload an Excel file first.",
+          errorPrefix: "Error",
+          fatalPrefix: "FATAL",
+          browserPrefix: "browser",
+        },
+      };
+
+      function t(key, params = {}) {
+        let value =
+          (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
+        for (const [k, v] of Object.entries(params)) {
+          value = value.replaceAll("{" + k + "}", String(v));
+        }
+        return value;
+      }
+
+      function applyLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem("app_lang", lang);
+        document.documentElement.lang = lang;
+        document.title = t("documentTitle");
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          el.textContent = t(el.dataset.i18n);
+        });
+        document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+          el.title = t(el.dataset.i18nTitle);
+        });
+        $("langRo").classList.toggle("active", lang === "ro");
+        $("langEn").classList.toggle("active", lang === "en");
+        updateCredBadge();
+        pollSession();
+        if (parsedItems.length) renderPreview(window.__lastPreview || null);
+      }
+
+      $("langRo").onclick = () => applyLanguage("ro");
+      $("langEn").onclick = () => applyLanguage("en");
+
+      const CRED_KEY = "sap_creds_v1";
+      function getCreds() {
+        if (window.__creds) return window.__creds;
+        try {
+          const s = sessionStorage.getItem(CRED_KEY);
+          if (s) {
+            window.__creds = JSON.parse(s);
+            return window.__creds;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function setCreds(c, persist) {
+        window.__creds = c;
+        try {
+          if (persist && c) sessionStorage.setItem(CRED_KEY, JSON.stringify(c));
+          else sessionStorage.removeItem(CRED_KEY);
+        } catch (e) {}
+        updateCredBadge();
+      }
+
+      function updateCredBadge() {
+        const b = $("btnEditCreds");
+        const c = getCreds();
+        if (c && c.username) {
+          b.textContent = c.username;
+          b.style.background = "var(--success-soft)";
+          b.style.color = "#087f5b";
+          b.style.borderColor = "#a9e4ce";
+        } else {
+          b.textContent = t("credentialsButton");
+          b.style.background = "";
+          b.style.color = "";
+          b.style.borderColor = "";
+        }
+      }
+
+      function openCredModal() {
+        const c = getCreds() || {};
+        $("credUser").value = c.username || "";
+        $("credPass").value = c.password || "";
+        $("credRemember").checked = !!sessionStorage.getItem(CRED_KEY);
+        $("credModal").classList.add("active");
+        $("credModal").setAttribute("aria-hidden", "false");
+        setTimeout(() => $("credUser").focus(), 50);
+      }
+
+      function closeCredModal() {
+        $("credModal").classList.remove("active");
+        $("credModal").setAttribute("aria-hidden", "true");
+      }
+
+      $("btnEditCreds").onclick = openCredModal;
+      $("credCancel").onclick = closeCredModal;
+      $("credSave").onclick = () => {
+        const u = $("credUser").value.trim();
+        const p = $("credPass").value;
+        if (!u || !p) {
+          if (confirm(t("confirmEmptyCreds"))) {
+            setCreds(null, false);
+            closeCredModal();
+          }
+          return;
+        }
+        setCreds({ username: u, password: p }, $("credRemember").checked);
+        closeCredModal();
+      };
+
+      async function loadEnv() {
+        const e = await (await fetch("/env")).json();
+        const b = $("envBadge");
+        if (e.is_production) {
+          b.className = "badge prod";
+          b.textContent = t("envProd");
+          b.title = e.url;
+        } else {
+          b.className = "badge test";
+          b.textContent = e.label || "TEST";
+          b.title = e.url;
+        }
+      }
+
+      async function loadConfig() {
+        const cfg = await (await fetch("/config")).json();
+        $("cfgUrl").value = cfg.sap_url || "";
+        $("cfgLabel").value = cfg.environment_label || "";
+        $("cfgMatCol").value = cfg.excel?.material_column || "B";
+        $("cfgDisplayMaintained").checked = cfg.display_maintained !== false;
+        const langs = cfg.languages || [];
+        const de = langs.find((l) => (l.code || "").toUpperCase() === "DE") || {
+          code: "DE",
+          country_name: "Germany",
+          column: cfg.excel?.description_column || "J",
+          enabled: true,
+        };
+        const en = langs.find((l) => (l.code || "").toUpperCase() === "EN") || {
+          code: "EN",
+          country_name: "United Kingdom",
+          column: "K",
+          enabled: false,
+        };
+        $("cfgLangDeOn").checked = !!de.enabled;
+        $("cfgLangDeCode").value = de.code || "DE";
+        $("cfgLangDeCountry").value = de.country_name || "Germany";
+        $("cfgLangDeCol").value = de.column || "J";
+        $("cfgLangEnOn").checked = !!en.enabled;
+        $("cfgLangEnCode").value = en.code || "EN";
+        $("cfgLangEnCountry").value = en.country_name || "United Kingdom";
+        $("cfgLangEnCol").value = en.column || "K";
+      }
+
+      function getSelectedLanguageCount() {
+        return [$("cfgLangDeOn"), $("cfgLangEnOn")].filter((el) => el.checked)
+          .length;
+      }
+
+      function validateLanguageSelection() {
+        const selectedCount = getSelectedLanguageCount();
+        if (!selectedCount) {
+          alert(t("noLangSelected"));
+          return false;
+        }
+        return true;
+      }
+
+      $("btnSaveCfg").onclick = async () => {
+        if (!validateLanguageSelection()) return;
+        const cfg = {
+          sap_url: $("cfgUrl").value.trim(),
+          environment_label: $("cfgLabel").value.trim(),
+          display_maintained: $("cfgDisplayMaintained").checked,
+          excel: {
+            material_column: $("cfgMatCol").value.trim().toUpperCase() || "B",
+            header_row: 1,
+            sheet: null,
+          },
+          languages: [
+            {
+              code: $("cfgLangDeCode").value.trim().toUpperCase() || "DE",
+              country_name: $("cfgLangDeCountry").value.trim() || "Germany",
+              column: $("cfgLangDeCol").value.trim().toUpperCase() || "J",
+              enabled: $("cfgLangDeOn").checked,
+            },
+            {
+              code: $("cfgLangEnCode").value.trim().toUpperCase() || "EN",
+              country_name:
+                $("cfgLangEnCountry").value.trim() || "United Kingdom",
+              column: $("cfgLangEnCol").value.trim().toUpperCase() || "K",
+              enabled: $("cfgLangEnOn").checked,
+            },
+          ],
+        };
+        const response = await fetch("/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cfg),
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          alert(err.error || t("errorPrefix"));
+          return;
+        }
+        await loadEnv();
+        logLine(t("configSaved"), "ok");
+      };
+
+      function logLine(text, cls = "info") {
+        const el = document.createElement("div");
+        el.className = "l " + cls;
+        el.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        $("log").appendChild(el);
+        $("log").scrollTop = $("log").scrollHeight;
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+
+      function translateBackendMessage(msg) {
+        if (currentLang !== "en") return msg;
+        return String(msg)
+          .replace(
+            "Lansez Chromium (vizibil)...",
+            "Launching Chromium (visible)...",
+          )
+          .replace(
+            "Lansez Chromium (ascuns (headless))...",
+            "Launching Chromium (headless)...",
+          )
+          .replace("Navighez la", "Navigating to")
+          .replace(
+            "goto > 30s; astept iframe SAP...",
+            "goto > 30s; waiting for SAP iframe...",
+          )
+          .replace(
+            "Formular SAP login completat automat.",
+            "SAP login form completed automatically.",
+          )
+          .replace("Formular completat", "Login form completed")
+          .replace("astept", "waiting")
+          .replace("Sesiune SAP gata.", "SAP session ready.")
+          .replace(
+            "Sesiune SAP activa, gata pentru job-uri.",
+            "SAP session active, ready for jobs.",
+          )
+          .replace("Inchid sesiunea SAP.", "Closing SAP session.")
+          .replace("Browser inchis.", "Browser closed.")
+          .replace(
+            "GUI nu mai e vizibil; re-navighez la app...",
+            "SAP GUI is no longer visible; navigating back to the app...",
+          )
+          .replace("NU a fost gasit in SAP", "was NOT found in SAP")
+          .replace("caut...", "searching...")
+          .replace(
+            "nu pot selecta toate, continui oricum",
+            "cannot select all rows, continuing anyway",
+          )
+          .replace("SAP confirma", "SAP confirms")
+          .replace(
+            "URL pare PRODUCTIE - refuz lansare.",
+            "URL looks like PRODUCTION - launch refused.",
+          )
+          .replace(
+            "GUI SAP nu a aparut in 4 min.",
+            "SAP GUI did not appear within 4 minutes.",
+          )
+          .replace("Worker SAP a esuat", "SAP worker failed");
+      }
+
+      function setSessStatus(state, msg) {
+        const dot = $("sessStatus").querySelector(".dot");
+        const txt = $("sessStatus").querySelector("span:last-child");
+        dot.className = "dot";
+        const map = {
+          stopped: ["", t("browserStopped")],
+          starting: ["run", t("browserStarting")],
+          ready: ["ok", t("browserReady")],
+          busy: ["run", t("browserBusy")],
+          error: ["err", t("browserError")],
+          stopping: ["run", t("browserStopping")],
+        };
+        const [cls, label] = map[state] || ["", state];
+        if (cls) dot.classList.add(cls);
+        txt.textContent =
+          label + (msg ? " - " + translateBackendMessage(msg) : "");
+        $("btnSessionStop").disabled =
+          state === "stopped" || state === "stopping";
+        const jobRunning = state === "busy";
+        $("btnRun").disabled = !parsedItems.length || jobRunning;
+      }
+
+      async function pollSession() {
+        try {
+          const s = await (await fetch("/session/status")).json();
+          setSessStatus(s.state, s.msg);
+        } catch (e) {}
+      }
+
+      const sessES = new EventSource("/session/events");
+      sessES.onmessage = (e) => {
+        try {
+          const ev = JSON.parse(e.data);
+          if (ev.type === "log") {
+            logLine(
+              `[${t("browserPrefix")}] ` + translateBackendMessage(ev.msg),
+              ev.level || "info",
+            );
+          } else if (ev.type === "session-ready") {
+            logLine(t("sapReady"), "ok");
+            pollSession();
+          } else if (ev.type === "state") {
+            setSessStatus(ev.state, ev.msg);
+          }
+        } catch (err) {}
+      };
+
+      $("btnSessionStop").onclick = async () => {
+        if (!confirm(t("confirmCloseBrowser"))) return;
+        setSessStatus("stopping", "");
+        await fetch("/session/stop", { method: "POST" });
+        logLine(t("browserClosed"), "info");
+        setTimeout(pollSession, 500);
+      };
+
+      $("btnReset").onclick = async () => {
+        if (!confirm(t("confirmReset"))) return;
+        const r = await fetch("/reset-browser", { method: "POST" });
+        const data = await r.json();
+        logLine(
+          t("cleanupDone", {
+            pids: data.killed_pids?.length || 0,
+            locks: data.removed?.length || 0,
+          }),
+          "ok",
+        );
+        setTimeout(pollSession, 500);
+      };
+
+      function renderPreview(data) {
+        if (!data) return;
+        const rowsLabel = t("rowsValid");
+        // Build column list from active languages reported by the server,
+        // falling back to whatever codes appear in items.
+        const codes = (data.languages || [])
+          .filter((l) => l.enabled)
+          .map((l) => l.code);
+        if (!codes.length) {
+          for (const it of data.preview || []) {
+            for (const k of Object.keys(it.descriptions || {})) {
+              if (!codes.includes(k)) codes.push(k);
+            }
+          }
+        }
+        let html = `<div class="row" style="margin-bottom:10px;">
+          <span class="pill"><span class="dot ok"></span><b>${data.count}</b> ${rowsLabel}</span>
+          <span class="pill">${t("fileLabel")}: ${escapeHtml(data.file)}</span>
+        </div><div class="scroll"><table><thead><tr><th>${t("row")}</th><th>${t("material")}</th>`;
+        for (const c of codes) {
+          html += `<th>${escapeHtml(c)}</th>`;
+        }
+        html += "</tr></thead><tbody>";
+        for (const it of data.preview) {
+          html += `<tr><td>${it.row}</td><td>${escapeHtml(it.material)}</td>`;
+          for (const c of codes) {
+            const v = (it.descriptions && it.descriptions[c]) || "";
+            html += `<td>${escapeHtml(v)}</td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</tbody></table></div>";
+        $("previewBox").innerHTML = html;
+      }
+
+      $("btnPreview").onclick = async () => {
+        const f = $("file").files[0];
+        if (!f) {
+          alert(t("noFile"));
+          return;
+        }
+        const fd = new FormData();
+        fd.append("file", f);
+        $("previewBox").innerHTML =
+          `<span class="pill"><span class="dot run"></span><span>${t("readingFile")}</span></span>`;
+        const r = await fetch("/preview", { method: "POST", body: fd });
+        const data = await r.json();
+        if (data.error) {
+          $("previewBox").innerHTML =
+            '<span style="color:var(--danger)">' +
+            escapeHtml(data.error) +
+            "</span>";
+          return;
+        }
+        parsedItems = data.all;
+        window.__lastPreview = data;
+        $("statTotal").textContent = data.count;
+        renderPreview(data);
+        pollSession();
+      };
+
+      $("btnRun").onclick = async () => {
+        if (!parsedItems.length) {
+          alert(t("loadFirst"));
+          return;
+        }
+        let creds = getCreds();
+        if (!creds) {
+          if (!confirm(t("confirmNoCreds"))) {
+            openCredModal();
+            return;
+          }
+        }
+        const limit = parseInt($("runLimit").value, 10) || 0;
+        const env = await (await fetch("/env")).json();
+        if (env.is_production) {
+          if (!confirm(t("confirmProd"))) return;
+        }
+        $("btnRun").disabled = true;
+        $("btnStop").disabled = false;
+        $("btnReport").disabled = true;
+        $("statDone").textContent = "0";
+        $("statOk").textContent = "0";
+        $("statNF").textContent = "0";
+        $("statErr").textContent = "0";
+        $("progressBar").style.width = "0%";
+        logLine(t("sendJob"), "info");
+
+        const r = await fetch("/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: parsedItems,
+            limit,
+            credentials: creds || null,
+            headless: $("runHeadless").checked,
+          }),
+        });
+        if (!r.ok) {
+          const err = await r.json();
+          logLine(t("errorPrefix") + ": " + (err.msg || err.error), "err");
+          $("btnRun").disabled = false;
+          $("btnStop").disabled = true;
+          return;
+        }
+        const data = await r.json();
+        currentJob = data.job;
+        const total = data.count;
+        $("statTotal").textContent = total;
+        logLine(t("jobStarted", { job: currentJob, total }), "info");
+
+        let done = 0;
+        let ok = 0;
+        let nf = 0;
+        let err = 0;
+        if (jobES) jobES.close();
+        jobES = new EventSource("/events/" + currentJob);
+        jobES.onmessage = (e) => {
+          let ev;
+          try {
+            ev = JSON.parse(e.data);
+          } catch (_) {
+            return;
+          }
+          if (ev.type === "job-start") {
+            logLine(t("jobStartTotal", { total: ev.total }), "step");
+          } else if (ev.type === "item-start") {
+            logLine(
+              `[${ev.index}/${ev.total}] ${ev.material}: ${(ev.description || "").slice(0, 80)}`,
+              "step",
+            );
+          } else if (ev.type === "item-end") {
+            done++;
+            if (ev.ok) {
+              ok++;
+              logLine(t("itemOk", { material: ev.material }), "ok");
+            } else if (ev.not_found) {
+              nf++;
+              logLine(t("itemNotFound", { material: ev.material }), "warn");
+            } else {
+              err++;
+              logLine(
+                t("itemError", {
+                  material: ev.material,
+                  msg: translateBackendMessage(ev.msg),
+                }),
+                "err",
+              );
+            }
+            $("statDone").textContent = done;
+            $("statOk").textContent = ok;
+            $("statNF").textContent = nf;
+            $("statErr").textContent = err;
+            $("progressBar").style.width = (done * 100) / total + "%";
+          } else if (ev.type === "log") {
+            logLine(translateBackendMessage(ev.msg), ev.level || "info");
+          } else if (ev.type === "job-end") {
+            const s = ev.summary;
+            logLine(
+              t("jobFinished", {
+                ok: s.ok,
+                notFound: s.not_found,
+                fail: s.fail,
+                skipped: s.skipped,
+              }),
+              "ok",
+            );
+            $("btnRun").disabled = false;
+            $("btnStop").disabled = true;
+            $("btnReport").disabled = false;
+          } else if (ev.type === "fatal") {
+            logLine(
+              t("fatalPrefix") + ": " + translateBackendMessage(ev.error),
+              "err",
+            );
+            $("btnRun").disabled = false;
+            $("btnStop").disabled = true;
+            $("btnReport").disabled = false;
+          }
+        };
+        jobES.addEventListener("end", () => {
+          if (jobES) jobES.close();
+        });
+      };
+
+      $("btnStop").onclick = async () => {
+        if (!currentJob) return;
+        await fetch("/stop/" + currentJob, { method: "POST" });
+        logLine(t("stopSent"), "warn");
+      };
+
+      $("btnReport").onclick = () => {
+        if (currentJob) window.location = "/report/" + currentJob;
+      };
+
+      applyLanguage(currentLang);
+      loadEnv();
+      loadConfig();
+      pollSession();
+      setInterval(pollSession, 5000);
+    </script>
+  </body>
+</html>

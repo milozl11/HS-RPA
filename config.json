@@ -1,0 +1,63 @@
+{
+  "sap_url": "https://cift6.dc.hella.com:44300/sap/bc/ui2/flp?sap-client=100&sap-language=EN#CustomsProduct-manageCustomsDescription?sap-ui-tech-hint=GUI",
+  "environment_label": "FT1",
+  "production_hosts": [],
+  "country": "DE",
+  "country_name": "Germany",
+  "headless_after_login": false,
+  "excel": {
+    "material_column": "B",
+    "header_row": 1,
+    "sheet": null
+  },
+  "languages": [
+    {
+      "code": "DE",
+      "country_name": "Germany",
+      "column": "J",
+      "enabled": true
+    },
+    {
+      "code": "EN",
+      "country_name": "United Kingdom",
+      "column": "K",
+      "enabled": true
+    }
+  ],
+  "limit": 0,
+  "slow_mo_ms": 200,
+  "display_maintained": true,
+  "hs": {
+    "sap_url": "https://cift1.dc.hella.com:44300/sap/bc/ui2/flp?sap-client=100&sap-language=EN#CustomsProduct-classify?sap-ui-tech-hint=GUI",
+    "systems": [
+      {
+        "id": "FT1",
+        "label": "FT1 (cift1)",
+        "sap_url": "https://cift1.dc.hella.com:44300/sap/bc/ui2/flp?sap-client=100&sap-language=EN#CustomsProduct-classify?sap-ui-tech-hint=GUI"
+      },
+      {
+        "id": "FT6",
+        "label": "FT6 (cift6)",
+        "sap_url": "https://cift6.dc.hella.com:44300/sap/bc/ui2/flp?sap-client=100&sap-language=EN#CustomsProduct-classify?sap-ui-tech-hint=GUI"
+      }
+    ],
+    "reference_file": "Referinta/Referinta TECDOC HS.xlsx",
+    "default_scheme": "EDCHSCDEEX",
+    "allow_commit": true,
+    "display_all_products": false,
+    "description_display_maintained": true,
+    "description_languages": [
+      {
+        "code": "DE",
+        "country_name": "Germany",
+        "column": "G"
+      },
+      {
+        "code": "EN",
+        "country_name": "United Kingdom",
+        "column": "F"
+      }
+    ],
+    "reference_sheet": null
+  }
+}

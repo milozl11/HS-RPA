@@ -1,0 +1,3244 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAP GTS - Coduri tarifare (HS)</title>
+    <link rel="stylesheet" href="/static/app.css" />
+    <style>
+      .brand-mark {
+        background: var(--success);
+      }
+      .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .page-title {
+        margin: 0;
+        font-size: 22px;
+        color: var(--ink);
+      }
+      .page-kicker {
+        display: none;
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .status-strip {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .workflow-shell {
+        margin-bottom: 14px;
+        padding: 16px 18px 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+      .workflow-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .workflow-head h3 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 14px;
+      }
+      .workflow-head p {
+        margin: 2px 0 0;
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+      .workflow-track {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0;
+      }
+      .flow-step {
+        position: relative;
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 9px;
+        align-items: center;
+        min-width: 0;
+        padding-right: 14px;
+      }
+      .flow-step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 15px;
+        left: 32px;
+        right: 0;
+        height: 2px;
+        background: #dbe4ef;
+        z-index: 0;
+      }
+      .flow-number {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border: 2px solid #cbd7e5;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .flow-copy {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        background: #fff;
+      }
+      .flow-copy b,
+      .flow-copy span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .flow-copy b {
+        color: var(--muted-strong);
+        font-size: 12px;
+      }
+      .flow-copy span {
+        color: var(--muted);
+        font-size: 10.5px;
+      }
+      .flow-step.active .flow-number {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 0 0 4px rgba(18, 97, 214, 0.12);
+      }
+      .flow-step.active .flow-copy b {
+        color: var(--primary-strong);
+      }
+      .flow-step.done .flow-number {
+        border-color: var(--success);
+        background: var(--success);
+        color: #fff;
+      }
+      .flow-step.done:not(:last-child)::after {
+        background: var(--success);
+      }
+      .flow-step.error .flow-number {
+        border-color: var(--danger);
+        background: var(--danger);
+        color: #fff;
+      }
+      .readiness-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .health-card {
+        min-width: 0;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: var(--surface);
+      }
+      .health-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 5px;
+        color: var(--muted);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .health-card strong,
+      .health-card small {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .health-card strong {
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .health-card small {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 10.5px;
+      }
+      .health-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #94a3b8;
+      }
+      .health-dot.ok {
+        background: var(--success);
+      }
+      .health-dot.warn {
+        background: var(--warning);
+      }
+      .health-dot.err {
+        background: var(--danger);
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(400px, 480px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+      .stack {
+        display: grid;
+        gap: 16px;
+      }
+      .card {
+        overflow: hidden;
+      }
+      .card-title-wrap {
+        min-width: 0;
+      }
+      .card-title-wrap .card-title {
+        margin-bottom: 3px;
+      }
+      .card-body {
+        display: grid;
+        gap: 14px;
+      }
+      .section-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .card-subtitle {
+        display: none;
+      }
+      #autoBox .section-note {
+        display: none;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .check-tile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 36px;
+        padding: 7px 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 7px;
+        font-weight: 650;
+        color: var(--muted-strong);
+      }
+      .check-tile input {
+        flex: 0 0 auto;
+      }
+      .sequence-note {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px dashed #b9cae0;
+        border-radius: 8px;
+        background: #f7faff;
+        color: var(--muted-strong);
+        font-size: 11.5px;
+        font-weight: 700;
+      }
+      .sequence-note .arrow {
+        color: var(--primary);
+      }
+      .reference-state {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-soft);
+      }
+      .reference-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: #e8eef7;
+        color: var(--muted-strong);
+        font-size: 16px;
+        font-weight: 900;
+      }
+      .reference-state.ok .reference-icon {
+        background: #e8f7f1;
+        color: #087f5b;
+      }
+      .reference-state.error .reference-icon {
+        background: #fdecec;
+        color: #a51d2d;
+      }
+      .reference-state strong,
+      .reference-state span {
+        display: block;
+      }
+      .reference-state strong {
+        color: var(--ink);
+        font-size: 12.5px;
+      }
+      .reference-state span {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 10.5px;
+        overflow-wrap: anywhere;
+      }
+      #queueRows.stack {
+        gap: 4px;
+      }
+      .queue-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) 28px;
+        gap: 6px;
+        align-items: center;
+        padding: 3px 5px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+      }
+      .queue-row label {
+        display: none;
+      }
+      .queue-row select,
+      .queue-row input {
+        min-height: 28px;
+        padding: 3px 7px;
+        border-radius: 6px;
+      }
+      .queue-row .queue-remove {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 0;
+        font-size: 16px;
+        line-height: 1;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(70px, 1fr));
+        gap: 8px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-soft);
+        padding: 10px;
+        min-height: 66px;
+      }
+      .stat b {
+        display: block;
+        font-size: 21px;
+        line-height: 1;
+        margin-bottom: 4px;
+        color: var(--ink);
+      }
+      .stat span {
+        color: var(--muted);
+        font-size: 10.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      .scroll {
+        max-height: 360px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+      th,
+      td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #eef3f9;
+        color: var(--muted-strong);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      tr:hover td {
+        background: #fbfdff;
+      }
+      code {
+        padding: 2px 6px;
+        border-radius: 5px;
+        background: #eef3f9;
+        color: #28476d;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+      }
+      #log {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #1f2937;
+        border-radius: 8px;
+        background: #101828;
+        color: #dbe4ee;
+        padding: 12px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+      }
+      .l {
+        padding: 3px 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .l.info {
+        color: #9cc9ff;
+      }
+      .l.step {
+        color: #c7d2fe;
+      }
+      .l.ok {
+        color: #8ee8be;
+      }
+      .l.warn {
+        color: #ffd88a;
+      }
+      .l.err {
+        color: #ffb4b4;
+      }
+      .banner {
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid #f2d8a8;
+        background: var(--warning-soft);
+        color: #7a5a12;
+        font-size: 12.5px;
+        line-height: 1.6;
+      }
+      .banner.danger {
+        border-color: #f2b8b8;
+        background: #fdecec;
+        color: #a51d2d;
+      }
+      .banner.ok {
+        border-color: #a9e4ce;
+        background: #e8f7f1;
+        color: #087f5b;
+      }
+      .banner.info {
+        border-color: #bcd6f5;
+        background: #eaf2fd;
+        color: #1a4f96;
+      }
+      .commit-control {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 12px 14px;
+        border: 1px solid #e6c781;
+        border-radius: 8px;
+        background: #fffbeb;
+        color: #6b5218;
+      }
+      .commit-control label {
+        margin: 0;
+      }
+      .commit-control strong,
+      .commit-control span {
+        display: block;
+      }
+      .commit-control strong {
+        color: #674c0b;
+        font-size: 12.5px;
+      }
+      .commit-control span {
+        margin-top: 2px;
+        font-size: 11px;
+      }
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        margin: 2px 4px 2px 0;
+        padding: 3px 7px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #f5f7fa;
+        color: var(--muted-strong);
+        font-size: 10.5px;
+        font-weight: 750;
+        white-space: nowrap;
+      }
+      .status-chip.ok {
+        border-color: #a9e4ce;
+        background: #e8f7f1;
+        color: #087f5b;
+      }
+      .status-chip.warn {
+        border-color: #f2d8a8;
+        background: #fff4df;
+        color: #7a5a12;
+      }
+      .status-chip.err {
+        border-color: #f2b8b8;
+        background: #fdecec;
+        color: #a51d2d;
+      }
+      .modal-box.settings-modal-box {
+        display: flex;
+        flex-direction: column;
+        width: min(920px, 100%);
+        max-height: min(820px, calc(100vh - 48px));
+        overflow: hidden;
+      }
+      .settings-modal-box .modal-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow: auto;
+      }
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .settings-section {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #fbfdff;
+      }
+      .settings-section.span-all {
+        grid-column: 1 / -1;
+      }
+      .settings-section h3 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .settings-section > p {
+        margin: -7px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .language-setting {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 0.8fr) minmax(0, 1.4fr);
+        gap: 10px;
+        align-items: end;
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+      .language-code {
+        display: grid;
+        place-items: center;
+        min-height: 36px;
+        border-radius: 7px;
+        background: var(--ink);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .log-tools {
+        display: flex;
+        gap: 6px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(15, 23, 42, 0.48);
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-box {
+        width: min(440px, 100%);
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+      .modal-header,
+      .modal-actions {
+        padding: 16px 20px;
+        background: var(--surface-soft);
+      }
+      .modal-header {
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .modal-actions {
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      .modal-body {
+        padding: 18px 20px;
+        display: grid;
+        gap: 12px;
+      }
+      #detailModal .modal-body {
+        padding: 0;
+        max-height: 60vh;
+        overflow: auto;
+      }
+      @media (max-width: 1080px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .readiness-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .workflow-track {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        .flow-step:not(:last-child)::after {
+          top: 32px;
+          bottom: -8px;
+          left: 15px;
+          right: auto;
+          width: 2px;
+          height: auto;
+        }
+      }
+      @media (max-width: 720px) {
+        .topbar {
+          align-items: flex-start;
+          flex-wrap: wrap;
+          padding: 12px 16px;
+        }
+        .top-actions {
+          width: 100%;
+          order: 3;
+          justify-content: flex-start;
+        }
+        main {
+          width: min(100% - 24px, 1440px);
+          margin-top: 12px;
+        }
+        .readiness-grid,
+        .settings-grid,
+        .field-grid {
+          grid-template-columns: 1fr;
+        }
+        .settings-section.span-all {
+          grid-column: auto;
+        }
+        .language-setting {
+          grid-template-columns: 52px 1fr;
+        }
+        .language-setting > div:last-child {
+          grid-column: 1 / -1;
+        }
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .queue-row {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) 28px;
+        }
+      }
+    </style>
+  </head>
+  <body class="fixed-shell">
+    <div id="credModal" class="modal" aria-hidden="true">
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h2 style="margin: 0; font-size: 16px">Credentiale SAP</h2>
+        </div>
+        <form id="credForm" autocomplete="on">
+          <div class="modal-body">
+            <p class="section-note">Doar pentru sesiunea curenta.</p>
+            <div>
+              <label for="credUser">Utilizator</label>
+              <input id="credUser" type="text" autocomplete="username" />
+            </div>
+            <div>
+              <label for="credPass">Parola</label>
+              <input
+                id="credPass"
+                type="password"
+                autocomplete="current-password"
+              />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="ghost" id="credCancel">
+              Anuleaza
+            </button>
+            <button type="button" id="credSave">Salveaza</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="detailModal" class="modal" aria-hidden="true">
+      <div
+        class="modal-box"
+        style="width: min(920px, 100%)"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="modal-header">
+          <h2 id="detailTitle" style="margin: 0; font-size: 16px">
+            Detalii grup
+          </h2>
+          <button type="button" class="ghost compact" id="detailClose">
+            Inchide
+          </button>
+        </div>
+        <div class="modal-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Product Short Text</th>
+                <th>Material Type</th>
+                <th>Tecdoc Number</th>
+                <th>Text Generic Article Number (Tecdoc)</th>
+                <th>Descrieri DE / EN</th>
+              </tr>
+            </thead>
+            <tbody id="detailBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="settingsModal" class="modal" aria-hidden="true">
+      <div
+        class="modal-box settings-modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settingsTitle"
+      >
+        <div class="modal-header">
+          <div>
+            <h2 id="settingsTitle" style="margin: 0; font-size: 16px">
+              Setari flux integrat
+            </h2>
+            <p class="section-note" style="margin-top: 3px">
+              Doar fluxul HS + descrieri.
+            </p>
+          </div>
+          <button type="button" class="ghost compact" id="settingsCloseTop">
+            Inchide
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-grid">
+            <section class="settings-section">
+              <h3>Clasificare si referinta</h3>
+              <div>
+                <label for="cfgDefaultScheme">Schema implicita</label>
+                <select id="cfgDefaultScheme"></select>
+              </div>
+              <div>
+                <label for="cfgReferenceSheet">Foaie Excel referinta</label>
+                <input
+                  id="cfgReferenceSheet"
+                  type="text"
+                  placeholder="Prima foaie (automat)"
+                />
+                <p class="section-note">Gol = prima foaie.</p>
+              </div>
+              <div class="reference-state" id="settingsReferenceState">
+                <div class="reference-icon">DB</div>
+                <div>
+                  <strong id="settingsReferenceTitle">Se incarca...</strong>
+                  <span id="settingsReferenceMeta"></span>
+                </div>
+              </div>
+              <p class="section-note">
+                Referinta TECDOC se actualizeaza manual, in folderul
+                <code>Referinta</code>.
+              </p>
+              <label class="check-tile" for="cfgDisplayAllProducts">
+                <input id="cfgDisplayAllProducts" type="checkbox" />
+                <span>Include produsele deja clasificate</span>
+              </label>
+            </section>
+            <section class="settings-section">
+              <h3>Comportament SAP pentru descrieri</h3>
+              <label class="check-tile" for="cfgDisplayMaintained">
+                <input id="cfgDisplayMaintained" type="checkbox" checked />
+                <span>Afiseaza si actualizeaza materialele deja mentinute</span>
+              </label>
+              <div class="banner info">
+                Ordine: referinta → HS → DE/EN → schema urmatoare.
+              </div>
+              <div>
+                <label>Aplicatie SAP destinatie</label>
+                <p class="section-note" id="cfgDescriptionTarget">
+                  Se deriva automat din sistemul SAP selectat.
+                </p>
+              </div>
+            </section>
+
+            <section class="settings-section span-all">
+              <h3>Mapare descrieri comerciale</h3>
+              <div class="language-setting">
+                <div class="language-code">DE</div>
+                <div>
+                  <label for="cfgDeColumn">Coloana descriere</label>
+                  <input id="cfgDeColumn" type="text" value="J" />
+                </div>
+                <div>
+                  <label for="cfgDeCountry">Tara SAP</label>
+                  <input id="cfgDeCountry" type="text" value="Germany" />
+                </div>
+              </div>
+              <div class="language-setting">
+                <div class="language-code">EN</div>
+                <div>
+                  <label for="cfgEnColumn">Coloana descriere</label>
+                  <input id="cfgEnColumn" type="text" value="K" />
+                </div>
+                <div>
+                  <label for="cfgEnCountry">Tara SAP</label>
+                  <input id="cfgEnCountry" type="text" value="United Kingdom" />
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <a href="/apps/descriptions" class="nav-button"
+            >Deschide aplicatia standalone</a
+          >
+          <div class="spacer"></div>
+          <button type="button" class="ghost" id="settingsCancel">
+            Anuleaza
+          </button>
+          <button type="button" id="settingsSave">Salveaza setarile</button>
+        </div>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <div class="brand-mark">HS</div>
+      <div>
+        <h1 class="brand-title">Coduri tarifare (HS)</h1>
+        <div class="brand-subtitle">SAP GTS - Classify Products</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="top-actions">
+        <span id="sessStatus" class="pill"
+          ><span class="dot"></span><span>Browser oprit</span></span
+        >
+        <a href="/" class="nav-button">Panou aplicatii</a>
+        <a href="/apps/hs/reports" class="nav-button">Rapoarte</a>
+        <a href="/apps/hs/dashboard" class="nav-button">Dashboard</a>
+        <button class="ghost compact" id="btnSettings">Setari flux</button>
+        <button class="ghost compact" id="btnCreds">Credentiale</button>
+        <button id="btnReset" class="ghost compact">Reset browser</button>
+        <button id="btnSessStop" class="ghost compact">
+          Inchide aplicatia
+        </button>
+        <div class="lang-switch" aria-label="Language">
+          <button type="button" id="langRo">RO</button>
+          <button type="button" id="langEn">EN</button>
+        </div>
+        <span id="envBadge" class="badge">TEST</span>
+      </div>
+    </header>
+
+    <main>
+      <div id="hsWizard" class="wizard" style="--wizard-cols: 3">
+        <section class="card wizard-rail" aria-label="Pasii operatorului">
+          <div class="rail-top">
+            <div class="wizard-steps">
+              <button type="button" class="wizard-step" data-wizard-step="0">
+                <b>1. Pregatire</b><span>Sursa, sistem, schema</span>
+              </button>
+              <button type="button" class="wizard-step" data-wizard-step="1">
+                <b>2. Aprobare</b><span>Grupuri si salvare SAP</span>
+              </button>
+              <button type="button" class="wizard-step" data-wizard-step="2">
+                <b>3. Executie</b><span>Progres, rapoarte, jurnal</span>
+              </button>
+            </div>
+
+            <section class="readiness-grid" aria-label="Starea configurarii">
+              <div class="health-card">
+                <div class="health-label">
+                  <span id="healthRefDot" class="health-dot"></span>Referinta
+                </div>
+                <strong id="healthRefTitle">Se verifica...</strong>
+                <small id="healthRefMeta">Fisier TECDOC</small>
+              </div>
+              <div class="health-card">
+                <div class="health-label">
+                  <span id="healthSapDot" class="health-dot"></span>Sistem SAP
+                </div>
+                <strong id="healthSapTitle">Se incarca...</strong>
+                <small id="healthSapMeta">Classify + Descriptions</small>
+              </div>
+              <div class="health-card">
+                <div class="health-label">
+                  <span id="healthLangDot" class="health-dot"></span>Descrieri
+                </div>
+                <strong id="healthLangTitle">DE + EN</strong>
+                <small id="healthLangMeta">Se verifica maparea</small>
+              </div>
+              <div class="health-card">
+                <div class="health-label">
+                  <span id="healthSafetyDot" class="health-dot"></span>Mod
+                  salvare
+                </div>
+                <strong id="healthSafetyTitle">Dry-run</strong>
+                <small id="healthSafetyMeta">Fara modificari in SAP</small>
+              </div>
+            </section>
+          </div>
+
+          <div class="wizard-progress"><span data-wizard-bar></span></div>
+
+          <section
+            class="workflow-shell"
+            aria-label="Etapele fluxului integrat"
+          >
+            <div class="workflow-head">
+              <span id="workflowStatus" class="status-chip">Pregatire</span>
+            </div>
+            <div class="workflow-track">
+              <div class="flow-step" data-flow-step="reference">
+                <span class="flow-number">1</span>
+                <div class="flow-copy">
+                  <b>Referinta</b><span>TECDOC + HS + DE/EN</span>
+                </div>
+              </div>
+              <div class="flow-step" data-flow-step="worklist">
+                <span class="flow-number">2</span>
+                <div class="flow-copy">
+                  <b>Worklist</b><span>Export si analiza SAP</span>
+                </div>
+              </div>
+              <div class="flow-step" data-flow-step="hs">
+                <span class="flow-number">3</span>
+                <div class="flow-copy">
+                  <b>Coduri HS</b><span>Grupuri confirmate</span>
+                </div>
+              </div>
+              <div class="flow-step" data-flow-step="descriptions">
+                <span class="flow-number">4</span>
+                <div class="flow-copy">
+                  <b>Descrieri</b><span>DE + EN per material</span>
+                </div>
+              </div>
+              <div class="flow-step" data-flow-step="done">
+                <span class="flow-number">5</span>
+                <div class="flow-copy">
+                  <b>Schema completa</b><span>Poate porni urmatoarea</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+        <div class="wizard-stage">
+          <div
+            class="wizard-pane pane-center"
+            data-wizard-pane
+            data-title="Pregatire rulare"
+            data-title-en="Run preparation"
+            data-hint="Sursa, sistem, scheme."
+            data-hint-en="Source, system, schemes."
+          >
+            <div class="stack">
+              <section class="card">
+                <div class="card-header">
+                  <div class="card-title-wrap">
+                    <h3 class="card-title">
+                      <span class="step-index">1</span
+                      ><span>Pregatire rulare</span>
+                    </h3>
+                    <p class="card-subtitle">Sursa, sistem, scheme.</p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="mode-toggle">
+                    <button id="modeAuto" type="button">O schema</button>
+                    <button id="modeManual" type="button">
+                      Import worklist
+                    </button>
+                    <button id="modeQueue" type="button">Coada scheme</button>
+                  </div>
+
+                  <div id="systemBox">
+                    <label for="hsSystem">Sistem SAP</label>
+                    <select id="hsSystem"></select>
+                    <p class="section-note" id="systemNote"></p>
+                  </div>
+
+                  <div id="schemeSingleBox">
+                    <label for="scheme">Schema de numerotare</label>
+                    <select id="scheme"></select>
+                    <p class="section-note" id="schemeNote"></p>
+                  </div>
+
+                  <label class="check-tile" for="headless">
+                    <input id="headless" type="checkbox" />
+                    <span>Ruleaza ascuns (headless)</span>
+                  </label>
+
+                  <label class="check-tile" for="autoClassify">
+                    <input id="autoClassify" type="checkbox" checked />
+                    <span>Mentine automat grupurile pregatite</span>
+                  </label>
+
+                  <div id="autoBox" class="stack">
+                    <div>
+                      <label for="variant">Varianta SAP</label>
+                      <input id="variant" type="text" />
+                      <p class="section-note">
+                        RPA foloseste varianta si schema, apoi descarca
+                        worklistul.
+                      </p>
+                    </div>
+                    <button id="btnDownload" class="success">
+                      Porneste RPA si descarca worklistul
+                    </button>
+                  </div>
+
+                  <div id="manualBox" class="stack hidden">
+                    <div>
+                      <label for="file">Export SAP (.xlsx)</label>
+                      <input id="file" type="file" accept=".xlsx,.xlsm" />
+                    </div>
+                    <button id="btnAnalyze">
+                      Analizeaza fisierul incarcat
+                    </button>
+                  </div>
+
+                  <div id="queueBox" class="stack hidden">
+                    <div id="queueRows" class="stack"></div>
+                    <button
+                      type="button"
+                      id="btnQueueAdd"
+                      class="ghost compact"
+                    >
+                      + Adauga schema
+                    </button>
+                    <p class="section-note">
+                      9 scheme. HS → DE/EN → urmatoarea. Worklist gol nu opreste
+                      coada.
+                    </p>
+                    <button id="btnQueueStart" class="success">
+                      Porneste coada automata
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div
+            class="wizard-pane"
+            data-wizard-pane
+            data-title="Previzualizare si aprobare"
+            data-title-en="Preview and approval"
+            data-hint="Grupuri pregatite si selectie SAP."
+            data-hint-en="Ready groups and SAP selection."
+          >
+            <section class="card">
+              <div class="card-header">
+                <div class="card-title-wrap">
+                  <h3 class="card-title">
+                    <span class="step-index">2</span
+                    ><span>Previzualizare si aprobare</span>
+                  </h3>
+                  <p class="card-subtitle">
+                    Grupuri pregatite si selectie SAP.
+                  </p>
+                </div>
+                <div class="row">
+                  <button id="btnReady" class="ghost compact" disabled>
+                    CSV pregatite
+                  </button>
+                  <button id="btnBlocked" class="ghost compact" disabled>
+                    CSV nepregatite
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="stats">
+                  <div class="stat">
+                    <b id="statRows">0</b><span>Randuri</span>
+                  </div>
+                  <div class="stat">
+                    <b id="statReady" style="color: var(--success)">0</b
+                    ><span>Pregatite</span>
+                  </div>
+                  <div class="stat">
+                    <b id="statGroups" style="color: var(--primary)">0</b
+                    ><span>Grupuri</span>
+                  </div>
+                  <div class="stat">
+                    <b id="statBlocked" style="color: var(--warning)">0</b
+                    ><span>Nepregatite</span>
+                  </div>
+                  <div class="stat">
+                    <b id="statSelected">0</b><span>Selectate</span>
+                  </div>
+                </div>
+
+                <div id="blockedNote" class="section-note"></div>
+
+                <div id="resultAlerts" class="stack" style="gap: 8px"></div>
+
+                <div class="row">
+                  <button id="btnAll" class="ghost compact" disabled>
+                    Selecteaza tot
+                  </button>
+                  <button id="btnNone" class="ghost compact" disabled>
+                    Deselecteaza
+                  </button>
+                </div>
+
+                <div class="scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style="width: 42px"></th>
+                        <th>Cod tarifar</th>
+                        <th>Materiale</th>
+                        <th>TECDOC</th>
+                        <th>Descrieri DE / EN</th>
+                        <th>Exemple</th>
+                        <th style="width: 90px">Detalii</th>
+                      </tr>
+                    </thead>
+                    <tbody id="groupBody">
+                      <tr>
+                        <td colspan="7" class="section-note">
+                          Nicio analiza inca.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div id="commitBanner" class="banner banner-compact">
+                  <b>Dry-run.</b> Completeaza codul, nu salveaza in SAP.
+                </div>
+
+                <div class="commit-control">
+                  <input id="allowCommit" type="checkbox" />
+                  <label for="allowCommit">
+                    <strong>Salveaza modificarile in SAP</strong>
+                    <span
+                      >Scrie HS, apoi DE/EN. Necesita permisiune locala.</span
+                    >
+                  </label>
+                </div>
+
+                <div class="row">
+                  <button id="btnClassify" class="success" disabled>
+                    Mentine grupurile aprobate
+                  </button>
+                  <button id="btnDescriptions" class="ghost" disabled>
+                    Mentine doar descrierile
+                  </button>
+                  <button id="btnStop" class="danger" disabled>Opreste</button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div
+            class="wizard-pane pane-split"
+            data-wizard-pane
+            data-title="Executie si jurnal"
+            data-title-en="Execution and log"
+            data-hint="Progres pe schema si jurnal."
+            data-hint-en="Per-scheme progress and log."
+          >
+            <section class="card">
+              <div class="card-header">
+                <div class="card-title-wrap">
+                  <h3 class="card-title">
+                    <span class="step-index">3</span
+                    ><span>Executie pe scheme</span>
+                  </h3>
+                  <p class="card-subtitle">Stare HS si DE/EN pe schema.</p>
+                </div>
+                <a
+                  id="btnCurrentReport"
+                  class="nav-button hidden"
+                  href="/apps/hs/reports"
+                  >Vezi raportul complet</a
+                >
+              </div>
+              <div class="card-body">
+                <div class="scroll" style="max-height: 240px">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style="width: 34px">#</th>
+                        <th>Schema</th>
+                        <th>Pregatite/Grupuri</th>
+                        <th>Blocate</th>
+                        <th>HS / Descrieri</th>
+                        <th>Stare</th>
+                      </tr>
+                    </thead>
+                    <tbody id="queueHistoryBody">
+                      <tr>
+                        <td colspan="6" class="section-note">
+                          Nicio schema procesata inca.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="card log-card">
+              <div class="card-header">
+                <div class="card-title-wrap">
+                  <h3 class="card-title">
+                    <span class="step-index">3</span><span>Jurnal tehnic</span>
+                  </h3>
+                  <p class="card-subtitle">
+                    Detalii pentru diagnostic si validarea mesajelor SAP.
+                  </p>
+                </div>
+                <div class="log-tools">
+                  <button type="button" class="ghost compact" id="btnClearLog">
+                    Goleste
+                  </button>
+                  <button type="button" class="ghost compact" id="btnToggleLog">
+                    Ascunde
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="log"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="wizard-footer">
+          <div>
+            <small data-wizard-meta>1 / 3</small>
+            <strong data-wizard-title>Pregatire rulare</strong>
+            <small data-wizard-hint>Sursa, sistem, scheme.</small>
+          </div>
+          <div class="wizard-nav">
+            <button type="button" class="ghost" data-wizard-back>Inapoi</button>
+            <button
+              type="button"
+              data-wizard-next
+              data-next-label="Continua"
+              data-last-label="Spre executie"
+            >
+              Continua
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="/static/wizard.js"></script>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const LANG_KEY = "hs_ui_lang";
+      const EN_TEXT = {
+        "Coduri tarifare (HS)": "Tariff codes (HS)",
+        "SAP GTS - Classify Products": "SAP GTS - Classify Products",
+        "Panou aplicatii": "Application dashboard",
+        "Descrieri standalone": "Standalone descriptions",
+        Rapoarte: "Reports",
+        "Setari flux": "Workflow settings",
+        Credentiale: "Credentials",
+        "Clasificare HS si descrieri comerciale":
+          "HS classification and commercial descriptions",
+        "Un singur flux controlat: referinta TECDOC, clasificare tarifara, apoi descrieri DE si EN confirmate in SAP pentru fiecare material.":
+          "One controlled workflow: TECDOC reference, tariff classification, then SAP-confirmed DE and EN descriptions for every material.",
+        "Browser oprit": "Browser stopped",
+        "Inchide browser": "Close browser",
+        "Inchide aplicatia": "Quit application",
+        "Reset browser": "Reset browser",
+        "Flux controlat pe schema": "Controlled per-scheme workflow",
+        "O etapa ramane blocata pana cand etapa anterioara este valida sau confirmata de SAP.":
+          "A stage stays blocked until the previous stage is valid or confirmed by SAP.",
+        Pregatire: "Preparation",
+        Referinta: "Reference",
+        "TECDOC + HS + DE/EN": "TECDOC + HS + DE/EN",
+        Worklist: "Worklist",
+        "Export si analiza SAP": "SAP export and analysis",
+        "Coduri HS": "HS codes",
+        "Grupuri confirmate": "Confirmed groups",
+        Descrieri: "Descriptions",
+        "DE + EN per material": "DE + EN per material",
+        "Schema completa": "Scheme complete",
+        "Poate porni urmatoarea": "Next scheme may start",
+        "Sistem SAP": "SAP system",
+        "Classify Products + Descriptions": "Classify Products + Descriptions",
+        "Se incarca...": "Loading...",
+        "DE + EN": "DE + EN",
+        "Se verifica maparea": "Checking mapping",
+        "Mod salvare": "Save mode",
+        "Dry-run": "Dry run",
+        "Fara modificari in SAP": "No SAP changes",
+        "Mod dry-run activ.": "Dry-run mode is active.",
+        "Aplicatia selecteaza materialele, deschide":
+          "The application selects materials and opens",
+        "si completeaza codul tarifar, dar":
+          "and fills in the tariff code, but",
+        "NU apasa Start Mass Classification (F8)":
+          "DOES NOT press Start Mass Classification (F8)",
+        "Nimic nu se salveaza in SAP pana cand nu activezi explicit commit-ul.":
+          "Nothing is saved in SAP until commit is explicitly enabled.",
+        "Pregatire rulare": "Run preparation",
+        "Alege sursa, sistemul si schemele care vor fi procesate.":
+          "Choose the source, system, and schemes to process.",
+        "Sursa, sistem, scheme.": "Source, system, schemes.",
+        "O schema": "Single scheme",
+        "Import worklist": "Import worklist",
+        "Coada scheme": "Scheme queue",
+        "Schema de numerotare": "Numbering scheme",
+        "Varianta SAP": "SAP variant",
+        "RPA apasa": "RPA presses",
+        "RPA foloseste varianta si schema, apoi descarca worklistul.":
+          "RPA uses the variant and scheme, then downloads the worklist.",
+        goleste: "clears",
+        ", goleste": ", clears",
+        ", scrie varianta, seteaza schema de numerotare si executa.":
+          ", enters the variant, sets the numbering scheme, and executes.",
+        "scrie varianta, seteaza schema de numerotare si executa.":
+          "enters the variant, sets the numbering scheme, and executes.",
+        "Ruleaza ascuns (headless)": "Run hidden (headless)",
+        "Porneste RPA si descarca worklistul":
+          "Start RPA and download worklist",
+        "Export SAP (.xlsx)": "SAP export (.xlsx)",
+        "Analizeaza fisierul incarcat": "Analyze uploaded file",
+        "+ Adauga schema": "+ Add scheme",
+        "Mentine automat grupurile pregatite (fara aprobare manuala)":
+          "Automatically maintain ready groups (without manual approval)",
+        "Mentine automat grupurile pregatite":
+          "Automatically maintain ready groups",
+        "9 scheme. HS → DE/EN → urmatoarea. Worklist gol nu opreste coada.":
+          "9 schemes. HS → DE/EN → next. Empty worklists do not stop the queue.",
+        "Coada preincarca cele 9 scheme RPA. Varianta SAP scrie schema de numerotare; RPA nu o mai tasteaza daca este deja corecta. Worklist-urile goale sau variantele lipsa nu opresc coada. Cu":
+          "The queue preloads the 9 RPA schemes. The SAP variant writes the numbering scheme; RPA does not retype it when it already matches. Empty worklists or missing variants do not stop the queue. With",
+        "Mentine automat": "Automatically maintain",
+        "bifat, fiecare schema ruleaza download → HS → descrieri DE/EN.":
+          "checked, each scheme runs download → HS → DE/EN descriptions.",
+        "HS confirmat": "HS confirmed",
+        "DE + EN confirmate": "DE + EN confirmed",
+        "schema urmatoare": "next scheme",
+        "Porneste coada automata": "Start automatic queue",
+        "Baza de date TECDOC": "TECDOC database",
+        "Sursa comuna pentru coduri tarifare si descrieri.":
+          "Common source for tariff codes and descriptions.",
+        "Mapare DE/EN": "DE/EN mapping",
+        "Se verifica referinta...": "Checking reference...",
+        "Inlocuieste referinta (optional)": "Replace reference (optional)",
+        "Incarca referinta": "Upload reference",
+        "Previzualizare si aprobare": "Preview and approval",
+        "Grupuri pregatite si selectie SAP.": "Ready groups and SAP selection.",
+        "Vezi exact ce este pregatit, blocat si selectat pentru SAP.":
+          "See exactly what is ready, blocked, and selected for SAP.",
+        "CSV pregatite": "Ready CSV",
+        "CSV nepregatite": "Blocked CSV",
+        Randuri: "Rows",
+        Pregatite: "Ready",
+        Grupuri: "Groups",
+        Nepregatite: "Blocked",
+        Selectate: "Selected",
+        "Selecteaza tot": "Select all",
+        Deselecteaza: "Deselect",
+        "Cod tarifar": "Tariff code",
+        Materiale: "Materials",
+        Exemple: "Examples",
+        Detalii: "Details",
+        "Nicio analiza inca.": "No analysis yet.",
+        "Salveaza modificarile in SAP": "Save changes in SAP",
+        "Scrie HS, apoi DE/EN. Necesita permisiune locala.":
+          "Writes HS, then DE/EN. Requires local permission.",
+        "Dry-run.": "Dry-run.",
+        "Completeaza codul, nu salveaza in SAP.":
+          "Fills the code, does not save in SAP.",
+        "Activeaza Start Mass Classification, apoi descrierile DE si EN. Necesita permisiunea locala din configurare.":
+          "Enables Start Mass Classification, followed by DE and EN descriptions. Requires local configuration permission.",
+        "Stare HS si DE/EN pe schema.": "HS and DE/EN status per scheme.",
+        "Progres pe schema si jurnal.": "Per-scheme progress and log.",
+        "Mesaje SAP si diagnostic.": "SAP messages and diagnostics.",
+        "Mentine grupurile aprobate": "Maintain approved groups",
+        "Mentine doar descrierile": "Maintain descriptions only",
+        Opreste: "Stop",
+        "Executie pe scheme": "Scheme execution",
+        "Starea HS si DE/EN este raportata separat pentru fiecare schema.":
+          "HS and DE/EN status is reported separately for each scheme.",
+        "Vezi raportul complet": "View full report",
+        "Worklist ramas": "Remaining worklist",
+        "Pregatite/Grupuri": "Ready/Groups",
+        Blocate: "Blocked",
+        "HS / Descrieri": "HS / Descriptions",
+        Stare: "Status",
+        "Nicio schema procesata inca.": "No scheme processed yet.",
+        "Jurnal tehnic": "Technical log",
+        "Doar pentru sesiunea curenta.": "Current browser session only.",
+        "Detalii pentru diagnostic si validarea mesajelor SAP.":
+          "Details for diagnostics and SAP message validation.",
+        Goleste: "Clear",
+        Ascunde: "Hide",
+        Afiseaza: "Show",
+        "Credentiale SAP": "SAP credentials",
+        "Folosite pentru SSO/Basic auth si formularul SAP. Raman doar in sesiunea acestui browser.":
+          "Used for SSO/Basic auth and the SAP form. They remain only in this browser session.",
+        Utilizator: "Username",
+        Parola: "Password",
+        Anuleaza: "Cancel",
+        Salveaza: "Save",
+        Inchide: "Close",
+        "Doar fluxul HS + descrieri.": "HS + descriptions workflow only.",
+        "Detalii grup": "Group details",
+        "Setari flux integrat": "Integrated workflow settings",
+        "Aceste setari se aplica fluxului HS + descrieri. Aplicatia de descrieri standalone isi pastreaza propria configurare.":
+          "These settings apply to the HS + descriptions workflow. The standalone descriptions application keeps its own configuration.",
+        "Clasificare si referinta": "Classification and reference",
+        "Valori implicite folosite la pregatirea fiecarei scheme.":
+          "Default values used to prepare each scheme.",
+        "Gol = prima foaie.": "Blank = first sheet.",
+        "Inlocuieste referinta TECDOC locala.":
+          "Replaces the local TECDOC reference.",
+        "Include produsele deja clasificate":
+          "Include already classified products",
+        "Schema implicita": "Default scheme",
+        "Foaie Excel referinta": "Reference Excel sheet",
+        "Prima foaie (automat)": "First sheet (automatic)",
+        "Lasa gol pentru prima foaie din fisier.":
+          "Leave blank to use the first sheet.",
+        "Comportament SAP pentru descrieri": "SAP behavior for descriptions",
+        "Ordine: referinta → HS → DE/EN → schema urmatoare.":
+          "Order: reference → HS → DE/EN → next scheme.",
+        "Descrierile comerciale se mentin pentru materialele din worklist, independent de confirmarea completa a codurilor HS.":
+          "Commercial descriptions are maintained for worklist materials, even if HS confirmation is incomplete.",
+        "Afiseaza si actualizeaza materialele deja mentinute":
+          "Show and update already maintained materials",
+        "Ordine:": "Order:",
+        "precontrol referinta → HS (cat se poate confirma) → DE + EN pentru materialele din worklist → schema urmatoare.":
+          "reference preflight → HS (as much as SAP confirms) → DE + EN for worklist materials → next scheme.",
+        "Aplicatie SAP destinatie": "Target SAP application",
+        "Mapare descrieri comerciale": "Commercial description mapping",
+        "Coloana poate fi o litera Excel (J/K) sau numele exact al antetului. Ambele limbi sunt obligatorii in fluxul integrat.":
+          "The column may be an Excel letter (J/K) or the exact header name. Both languages are mandatory in the integrated workflow.",
+        "Coloana descriere": "Description column",
+        "Tara SAP": "SAP country",
+        "Deschide aplicatia standalone": "Open standalone application",
+        "Salveaza setarile": "Save settings",
+        "Referinta lipsa": "Reference missing",
+        "Referinta pregatita": "Reference ready",
+        "Referinta invalida": "Invalid reference",
+        "Referinta indisponibila": "Reference unavailable",
+        "Necesita atentie": "Needs attention",
+        "Fisier lipsa": "File missing",
+        "Fisier valid": "Valid file",
+        "Fisier invalid sau lipsa": "Invalid or missing file",
+        "DE + EN obligatorii": "DE + EN required",
+        "Mapare incompleta": "Incomplete mapping",
+        "Configureaza limbile": "Configure languages",
+        "Dry-run sigur": "Safe dry run",
+        "Fara modificari persistente in SAP": "No persistent SAP changes",
+        "Salvare activa": "Commit enabled",
+        "HS + DE/EN vor fi scrise in SAP": "HS + DE/EN will be written to SAP",
+        "Classify + Descriptions pe acelasi sistem":
+          "Classify + Descriptions on the same system",
+        "Mediu productiv": "Production environment",
+        "Commit permis in configurare.": "Commit is allowed by configuration.",
+        "Commit permis.": "Commit allowed.",
+        "Bifa salveaza HS, apoi DE/EN in SAP.":
+          "The checkbox saves HS, then DE/EN in SAP.",
+        "Dry-run protejat.": "Protected dry-run.",
+        "Analiza da, salvare SAP nu.": "Analysis yes, SAP save no.",
+        "Daca bifezi optiunea de salvare,": "If you select commit,",
+        "aplicatia va apasa": "the application will press",
+        "Daca bifezi optiunea de salvare, aplicatia va apasa":
+          "If you select commit, the application will press",
+        "si va scrie in SAP,": "and write to SAP,",
+        "apoi va mentine obligatoriu descrierile": "then maintain the required",
+        "si va scrie in SAP, apoi va mentine obligatoriu descrierile":
+          "and write to SAP, then maintain the required",
+        "DE si EN": "DE and EN descriptions",
+        "Schema urmatoare": "The next scheme",
+        "porneste numai dupa confirmarile SAP pentru ambele etape.":
+          "starts only after SAP confirms both stages.",
+        ". Schema urmatoare porneste numai dupa confirmarile SAP pentru ambele etape.":
+          ". The next scheme starts only after SAP confirms both stages.",
+        "Daca bifezi optiunea de salvare, aplicatia va apasa Start Mass Classification (F8) si va scrie in SAP, apoi va mentine obligatoriu descrierile DE si EN. Schema urmatoare porneste numai dupa confirmarile SAP pentru ambele etape.":
+          "If you select commit, the application will press Start Mass Classification (F8), write to SAP, and then maintain the required DE and EN descriptions. The next scheme starts only after SAP confirms both stages.",
+        "Instalare protejata in dry-run.":
+          "Installation protected in dry-run mode.",
+        "Poti analiza si verifica selectiile,":
+          "You can analyze and verify selections,",
+        "dar salvarea in SAP nu poate fi activata din acest ecran.":
+          "but SAP commit cannot be enabled from this screen.",
+        "Poti analiza si verifica selectiile, dar salvarea in SAP nu poate fi activata din acest ecran.":
+          "You can analyze and verify selections, but SAP commit cannot be enabled from this screen.",
+        Schema: "Scheme",
+        "Analiza pregatita": "Analysis ready",
+        "Analizez worklistul": "Analyzing worklist",
+        "Descarc worklistul": "Downloading worklist",
+        "Worklist descarcat": "Worklist downloaded",
+        "Mentinere descrieri DE + EN": "Maintaining DE + EN descriptions",
+        "Descrieri confirmate": "Descriptions confirmed",
+        "Schema completa": "Scheme complete",
+        "Flux intrerupt": "Workflow interrupted",
+        "Rulare incompleta": "Incomplete run",
+        Pregatire: "Preparation",
+        "Sursa, sistem, schema": "Source, system, scheme",
+        Aprobare: "Approval",
+        "Grupuri si salvare SAP": "Groups and SAP save",
+        "Detalii pentru diagnostic si validarea mesajelor SAP.":
+          "Details for diagnostics and SAP message validation.",
+        Executie: "Execution",
+        "Progres, rapoarte, jurnal": "Progress, reports, log",
+        Inapoi: "Back",
+        Continua: "Continue",
+        "Spre executie": "Go to execution",
+        "Executie si jurnal": "Execution and log",
+        "Urmareste progresul pe schema, rapoartele si mesajele SAP.":
+          "Follow per-scheme progress, reports, and SAP messages.",
+      };
+      let uiLang = localStorage.getItem(LANG_KEY) === "en" ? "en" : "ro";
+      const originalText = new WeakMap();
+      let translationBusy = false;
+
+      function translateTextNode(node) {
+        if (
+          !node ||
+          !node.parentElement ||
+          ["SCRIPT", "STYLE"].includes(node.parentElement.tagName)
+        )
+          return;
+        const raw = node.nodeValue || "";
+        const normalized = raw.replace(/\s+/g, " ").trim();
+        if (!normalized) return;
+        if (!originalText.has(node)) {
+          originalText.set(node, normalized);
+        } else {
+          const stored = originalText.get(node);
+          const storedEnglish = EN_TEXT[stored] || stored;
+          if (normalized !== stored && normalized !== storedEnglish) {
+            originalText.set(node, normalized);
+          }
+        }
+        const ro = originalText.get(node);
+        const next = uiLang === "en" ? EN_TEXT[ro] || ro : ro;
+        const leading = (raw.match(/^\s*/) || [""])[0];
+        const trailing = (raw.match(/\s*$/) || [""])[0];
+        const wanted = leading + next + trailing;
+        if (raw !== wanted) node.nodeValue = wanted;
+      }
+
+      function applyUiLanguage(next) {
+        uiLang = next === "en" ? "en" : "ro";
+        localStorage.setItem(LANG_KEY, uiLang);
+        document.documentElement.lang = uiLang;
+        document.title =
+          uiLang === "en"
+            ? "SAP GTS - Tariff codes (HS)"
+            : "SAP GTS - Coduri tarifare (HS)";
+        document
+          .querySelector(".workflow-shell")
+          .setAttribute(
+            "aria-label",
+            uiLang === "en"
+              ? "Integrated workflow stages"
+              : "Etapele fluxului integrat",
+          );
+        document
+          .querySelector(".readiness-grid")
+          .setAttribute(
+            "aria-label",
+            uiLang === "en" ? "Configuration status" : "Starea configurarii",
+          );
+        translationBusy = true;
+        const walker = document.createTreeWalker(
+          document.body,
+          NodeFilter.SHOW_TEXT,
+        );
+        let node;
+        while ((node = walker.nextNode())) translateTextNode(node);
+        translationBusy = false;
+        $("langRo").classList.toggle("active", uiLang === "ro");
+        $("langEn").classList.toggle("active", uiLang === "en");
+        if (typeof schemes !== "undefined" && schemes.length) onSchemeChange();
+      }
+
+      function dual(ro, en) {
+        return uiLang === "en" ? en : ro;
+      }
+
+      $("langRo").onclick = () => applyUiLanguage("ro");
+      $("langEn").onclick = () => applyUiLanguage("en");
+
+      const languageObserver = new MutationObserver((mutations) => {
+        if (translationBusy || uiLang !== "en") return;
+        translationBusy = true;
+        for (const mutation of mutations) {
+          if (mutation.type === "characterData")
+            translateTextNode(mutation.target);
+          mutation.addedNodes.forEach((added) => {
+            if (added.nodeType === Node.TEXT_NODE) {
+              translateTextNode(added);
+              return;
+            }
+            if (added.nodeType !== Node.ELEMENT_NODE) return;
+            const walker = document.createTreeWalker(
+              added,
+              NodeFilter.SHOW_TEXT,
+            );
+            let node;
+            while ((node = walker.nextNode())) translateTextNode(node);
+          });
+        }
+        translationBusy = false;
+      });
+      languageObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+
+      let analysis = null;
+      let analysisVariant = "";
+      let groups = [];
+      let selected = new Set();
+      let currentJob = null;
+      let jobES = null;
+      let mode = "auto";
+      let schemes = [];
+      let allowCommitConfigured = false;
+      let queueHistory = [];
+      let queueRowSeq = 0;
+      // Armed only by the two interactive runs; queue events replay analyses too.
+      let autoClassifyPending = false;
+      let queuePreset = [];
+      let lastRunCommit = false;
+      let queueRunAutoClassify = false;
+      let currentConfig = null;
+      let currentFlowStep = "reference";
+      let classifyMaterials = {
+        committed: [],
+        dry_run: [],
+        failed: [],
+        blocked: [],
+      };
+
+      const CRED_KEY = "sap_creds_v1";
+      function getCreds() {
+        if (window.__creds) return window.__creds;
+        try {
+          const s = sessionStorage.getItem(CRED_KEY);
+          if (s) {
+            window.__creds = JSON.parse(s);
+            return window.__creds;
+          }
+        } catch (e) {}
+        return null;
+      }
+      function setCreds(c) {
+        window.__creds = c;
+        try {
+          if (c) sessionStorage.setItem(CRED_KEY, JSON.stringify(c));
+          else sessionStorage.removeItem(CRED_KEY);
+        } catch (e) {}
+        const b = $("btnCreds");
+        b.textContent =
+          c && c.username ? c.username : dual("Credentiale", "Credentials");
+      }
+      $("btnCreds").onclick = () => {
+        const c = getCreds() || {};
+        $("credUser").value = c.username || "";
+        $("credPass").value = c.password || "";
+        $("credModal").classList.add("active");
+        $("credModal").setAttribute("aria-hidden", "false");
+      };
+      function closeCredentials() {
+        $("credModal").classList.remove("active");
+        $("credModal").setAttribute("aria-hidden", "true");
+      }
+      $("credCancel").onclick = closeCredentials;
+      $("credSave").onclick = () => {
+        const u = $("credUser").value.trim();
+        const p = $("credPass").value;
+        setCreds(u && p ? { username: u, password: p } : null);
+        closeCredentials();
+      };
+
+      function logLine(text, cls = "info") {
+        const el = document.createElement("div");
+        el.className = "l " + cls;
+        el.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        $("log").appendChild(el);
+        $("log").scrollTop = $("log").scrollHeight;
+      }
+
+      const FLOW_ORDER = [
+        "reference",
+        "worklist",
+        "hs",
+        "descriptions",
+        "done",
+      ];
+
+      function setWorkflow(step, state = "active", label = "In lucru") {
+        const targetIndex = FLOW_ORDER.indexOf(step);
+        if (targetIndex < 0) return;
+        currentFlowStep = step;
+        document.querySelectorAll("[data-flow-step]").forEach((el) => {
+          const index = FLOW_ORDER.indexOf(el.dataset.flowStep);
+          el.classList.remove("active", "done", "error");
+          if (state === "error" && index === targetIndex) {
+            el.classList.add("error");
+          } else if (
+            index < targetIndex ||
+            (state === "done" && index === targetIndex)
+          ) {
+            el.classList.add("done");
+          } else if (index === targetIndex) {
+            el.classList.add("active");
+          }
+        });
+        const status = $("workflowStatus");
+        status.textContent = label;
+        status.className =
+          "status-chip" +
+          (state === "error" ? " err" : state === "done" ? " ok" : "");
+      }
+
+      function updateSaveModeHealth() {
+        const commit = !!$("allowCommit").checked && allowCommitConfigured;
+        $("healthSafetyDot").className =
+          "health-dot " + (commit ? "warn" : "ok");
+        $("healthSafetyTitle").textContent = commit
+          ? "Salvare activa"
+          : "Dry-run sigur";
+        $("healthSafetyMeta").textContent = commit
+          ? "HS + DE/EN vor fi scrise in SAP"
+          : "Fara modificari persistente in SAP";
+      }
+
+      function resetClassifyMaterials() {
+        classifyMaterials = {
+          committed: [],
+          dry_run: [],
+          failed: [],
+          blocked: [],
+        };
+        const box = $("resultAlerts");
+        if (box) box.innerHTML = "";
+      }
+
+      function pushMaterialStatus(ev) {
+        const status = String(ev.status || "").toLowerCase();
+        const product = String(ev.product || ev.material || "").trim();
+        if (!product) return;
+        const row = {
+          product,
+          hs_code: String(ev.hs_code || ""),
+          scheme: String(ev.scheme || ""),
+          msg: String(ev.msg || ""),
+          text: String(ev.text || ""),
+          reason_label: String(ev.reason_label || ""),
+        };
+        if (status === "committed") classifyMaterials.committed.push(row);
+        else if (status === "dry_run") classifyMaterials.dry_run.push(row);
+        else if (status === "failed") classifyMaterials.failed.push(row);
+        else if (status === "blocked") classifyMaterials.blocked.push(row);
+      }
+
+      function formatMaterialList(items, limit = 12) {
+        if (!items || !items.length) return "-";
+        const names = items.slice(0, limit).map((x) => x.product);
+        const suffix =
+          items.length > limit ? ` ... (+${items.length - limit})` : "";
+        return names.join(", ") + suffix;
+      }
+
+      function summarizeMaterialsByGroup(items) {
+        const byHs = new Map();
+        for (const row of items || []) {
+          const key = row.hs_code || "(fara HS)";
+          if (!byHs.has(key)) byHs.set(key, []);
+          byHs.get(key).push(row.product);
+        }
+        const chunks = [];
+        for (const [hs, products] of byHs.entries()) {
+          const sample = products.slice(0, 6).join(", ");
+          const tail =
+            products.length > 6 ? ` ... (+${products.length - 6})` : "";
+          chunks.push(`${hs}: ${sample}${tail}`);
+        }
+        return chunks.join(" | ") || "-";
+      }
+
+      function renderResultAlerts(summary) {
+        const box = $("resultAlerts");
+        if (!box) return;
+        const s = summary || {};
+        const committed = s.materials_committed || 0;
+        const dryRun = s.materials_dry_run || 0;
+        const failed = s.materials_failed || 0;
+        const blocked = s.materials_blocked || 0;
+        const alerts = [];
+
+        if (s.safety_aborted) {
+          alerts.push({
+            cls: "danger",
+            html:
+              "<b>Rularea a fost oprita pentru siguranta.</b><br>" +
+              esc(
+                s.abort_reason ||
+                  "Integritatea selectiei nu a putut fi confirmata.",
+              ),
+          });
+        }
+
+        if (committed) {
+          alerts.push({
+            cls: "ok",
+            html:
+              `<b>Mentinute in SAP: ${committed} materiale.</b><br>` +
+              esc(summarizeMaterialsByGroup(classifyMaterials.committed)),
+          });
+        }
+        if (dryRun) {
+          alerts.push({
+            cls: "",
+            html: `<b>Dry-run: ${dryRun} materiale.</b> Dialogul a fost completat, dar nu s-a salvat in SAP.`,
+          });
+        }
+        if (failed) {
+          alerts.push({
+            cls: "danger",
+            html:
+              `<b>Eroare / neconfirmate de SAP: ${failed} materiale.</b><br>` +
+              esc(summarizeMaterialsByGroup(classifyMaterials.failed)),
+          });
+        }
+        if (blocked) {
+          alerts.push({
+            cls: "",
+            html:
+              `<b>Blocate: ${blocked} materiale.</b> Nu au fost trimise in SAP.<br>` +
+              esc(formatMaterialList(classifyMaterials.blocked)),
+          });
+        }
+        if (lastRunCommit && !committed) {
+          alerts.push({
+            cls: "danger",
+            html: "<b>Nicio mentinere confirmata de SAP.</b> Raportul final nu a listat niciun material clasificat.",
+          });
+        }
+        if (!alerts.length) {
+          alerts.push({
+            cls: "info",
+            html: "Job incheiat, fara rezultate de raportat.",
+          });
+        }
+        box.innerHTML = alerts
+          .map((a) => `<div class="banner ${a.cls}">${a.html}</div>`)
+          .join("");
+      }
+
+      function renderFatalAlert(msg) {
+        const box = $("resultAlerts");
+        if (!box) return;
+        setWorkflow(currentFlowStep, "error", "Flux intrerupt");
+        box.innerHTML =
+          `<div class="banner danger"><b>Job intrerupt.</b><br>` +
+          esc(String(msg || "").split("\n")[0]) +
+          `</div>`;
+      }
+
+      function esc(s) {
+        return String(s == null ? "" : s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+
+      function setMode(next) {
+        mode = next;
+        $("modeAuto").classList.toggle("active", next === "auto");
+        $("modeManual").classList.toggle("active", next === "manual");
+        $("modeQueue").classList.toggle("active", next === "queue");
+        $("autoBox").classList.toggle("hidden", next !== "auto");
+        $("manualBox").classList.toggle("hidden", next !== "manual");
+        $("queueBox").classList.toggle("hidden", next !== "queue");
+        $("schemeSingleBox").classList.toggle("hidden", next === "queue");
+      }
+      $("modeAuto").onclick = () => setMode("auto");
+      $("modeManual").onclick = () => setMode("manual");
+      $("modeQueue").onclick = () => setMode("queue");
+
+      async function loadSchemes() {
+        const data = await (await fetch("/hs/schemes")).json();
+        schemes = data.schemes || [];
+        queuePreset = data.queue_preset || [];
+        const sel = $("scheme");
+        sel.innerHTML = "";
+        for (const s of schemes) {
+          const opt = document.createElement("option");
+          opt.value = s.code;
+          opt.textContent = `${s.code} - ${s.label}`;
+          sel.appendChild(opt);
+        }
+        const cfgSelect = $("cfgDefaultScheme");
+        cfgSelect.innerHTML = sel.innerHTML;
+        sel.value = data.default || (schemes[0] && schemes[0].code);
+        cfgSelect.value = data.default || (schemes[0] && schemes[0].code);
+        onSchemeChange();
+      }
+
+      function onSchemeChange() {
+        const s = schemes.find((x) => x.code === $("scheme").value);
+        if (!s) return;
+        $("variant").value = s.variant;
+        $("schemeNote").textContent = dual(
+          `Coloana de referinta: ${s.column}`,
+          `Reference column: ${s.column}`,
+        );
+      }
+      $("scheme").onchange = onSchemeChange;
+
+      function descriptionTargetFrom(url) {
+        const base = String(url || "").split("#", 1)[0];
+        return base
+          ? `${base}#CustomsProduct-manageCustomsDescription`
+          : "Tinta indisponibila";
+      }
+
+      function renderReferenceHealth(cfg) {
+        const settingsState = $("settingsReferenceState");
+        const loaded = !!cfg.reference_loaded;
+        settingsState.className =
+          "reference-state " + (loaded ? "ok" : "error");
+        $("healthRefDot").className = "health-dot " + (loaded ? "ok" : "err");
+        if (loaded) {
+          const mappings = (cfg.description_languages || [])
+            .map((language) => `${language.code}=${language.column}`)
+            .join(" · ");
+          $("healthRefTitle").textContent =
+            `${cfg.reference_tecdoc_count || 0} TECDOC`;
+          $("healthRefMeta").textContent =
+            cfg.reference_file || "Referinta activa";
+          $("settingsReferenceTitle").textContent = "Fisier valid";
+          $("settingsReferenceMeta").textContent =
+            `${cfg.reference_file} · ${cfg.reference_tecdoc_count || 0} TECDOC · ${mappings}`;
+          setWorkflow("reference", "done", "Referinta pregatita");
+        } else {
+          $("healthRefTitle").textContent = "Necesita atentie";
+          $("healthRefMeta").textContent = cfg.reference_file || "Fisier lipsa";
+          $("settingsReferenceTitle").textContent = "Fisier invalid sau lipsa";
+          $("settingsReferenceMeta").textContent =
+            cfg.reference_error || cfg.reference_file || "Verifica referinta";
+          setWorkflow("reference", "error", "Referinta lipsa");
+        }
+      }
+
+      function fillSettings(cfg) {
+        const languages = cfg.description_languages || [];
+        const de = languages.find((item) => item.code === "DE") || {};
+        const en = languages.find((item) => item.code === "EN") || {};
+        $("cfgDefaultScheme").value =
+          cfg.default_scheme || $("cfgDefaultScheme").value;
+        $("cfgReferenceSheet").value = cfg.reference_sheet || "";
+        $("cfgDisplayMaintained").checked =
+          cfg.description_display_maintained !== false;
+        $("cfgDisplayAllProducts").checked = cfg.display_all_products === true;
+        $("cfgDeColumn").value = de.column || "J";
+        $("cfgDeCountry").value = de.country_name || "Germany";
+        $("cfgEnColumn").value = en.column || "K";
+        $("cfgEnCountry").value = en.country_name || "United Kingdom";
+        $("cfgDescriptionTarget").textContent = descriptionTargetFrom(
+          cfg.sap_url,
+        );
+      }
+
+      async function loadConfig() {
+        const cfg = await (await fetch("/hs/config")).json();
+        currentConfig = cfg;
+        const envBadge = $("envBadge");
+        envBadge.textContent = cfg.is_production
+          ? `PRODUCTIV · ${cfg.system || cfg.environment_label || "SAP"}`
+          : cfg.system || cfg.environment_label || "TEST";
+        envBadge.title = cfg.sap_url || "";
+        envBadge.className = cfg.is_production ? "badge prod" : "badge";
+        allowCommitConfigured = !!cfg.allow_commit;
+        renderReferenceHealth(cfg);
+        fillSettings(cfg);
+        if (
+          !analysis &&
+          cfg.default_scheme &&
+          schemes.some((item) => item.code === cfg.default_scheme)
+        ) {
+          $("scheme").value = cfg.default_scheme;
+          onSchemeChange();
+        }
+        $("allowCommit").disabled = !allowCommitConfigured;
+        renderSystems(cfg);
+        const languages = cfg.description_languages || [];
+        const mapping = languages
+          .map((language) => `${language.code} ${language.column}`)
+          .join(" · ");
+        const mappingReady = ["DE", "EN"].every((code) =>
+          languages.some(
+            (language) => language.code === code && language.column,
+          ),
+        );
+        $("healthLangDot").className =
+          "health-dot " + (mappingReady ? "ok" : "err");
+        $("healthLangTitle").textContent = mappingReady
+          ? "DE + EN obligatorii"
+          : "Mapare incompleta";
+        $("healthLangMeta").textContent = mapping || "Configureaza limbile";
+        updateSaveModeHealth();
+        const banner = $("commitBanner");
+        if (allowCommitConfigured) {
+          banner.className = "banner danger";
+          banner.innerHTML =
+            "<b>Commit permis.</b> Bifa salveaza HS, apoi DE/EN in SAP.";
+        } else {
+          banner.className = "banner info";
+          banner.innerHTML =
+            "<b>Dry-run protejat.</b> Analiza da, salvare SAP nu.";
+        }
+      }
+
+      function renderSystems(cfg) {
+        const sel = $("hsSystem");
+        const systems = cfg.systems || [];
+        sel.innerHTML = "";
+        for (const s of systems) {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.label || s.id;
+          sel.appendChild(opt);
+        }
+        sel.value = cfg.system || "";
+        $("systemNote").textContent = cfg.sap_url || "";
+        $("healthSapDot").className = "health-dot ok";
+        $("healthSapTitle").textContent =
+          cfg.system || cfg.environment_label || "SAP";
+        $("healthSapMeta").textContent = cfg.is_production
+          ? "Mediu productiv"
+          : "Classify + Descriptions pe acelasi sistem";
+      }
+
+      $("hsSystem").onchange = async () => {
+        const sel = $("hsSystem");
+        const wanted = sel.value;
+        const r = await fetch("/hs/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ system: wanted }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          logLine(data.error || "Nu am putut schimba sistemul.", "err");
+          loadConfig();
+          return;
+        }
+        await loadConfig();
+        logLine(`Sistem SAP comutat pe ${wanted}.`, "ok");
+      };
+
+      function openSettings() {
+        if (currentConfig) fillSettings(currentConfig);
+        $("settingsModal").classList.add("active");
+        $("settingsModal").setAttribute("aria-hidden", "false");
+      }
+
+      function closeSettings() {
+        $("settingsModal").classList.remove("active");
+        $("settingsModal").setAttribute("aria-hidden", "true");
+      }
+
+      $("btnSettings").onclick = openSettings;
+      $("settingsCloseTop").onclick = closeSettings;
+      $("settingsCancel").onclick = closeSettings;
+      $("settingsModal").addEventListener("click", (event) => {
+        if (event.target === $("settingsModal")) closeSettings();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        closeSettings();
+        closeCredentials();
+        $("detailModal").classList.remove("active");
+        $("detailModal").setAttribute("aria-hidden", "true");
+      });
+
+      $("settingsSave").onclick = async () => {
+        const deColumn = $("cfgDeColumn").value.trim();
+        const enColumn = $("cfgEnColumn").value.trim();
+        const deCountry = $("cfgDeCountry").value.trim();
+        const enCountry = $("cfgEnCountry").value.trim();
+        if (!deColumn || !enColumn || !deCountry || !enCountry) {
+          alert("Completeaza coloana si tara SAP pentru DE si EN.");
+          return;
+        }
+        $("settingsSave").disabled = true;
+        const response = await fetch("/hs/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            default_scheme: $("cfgDefaultScheme").value,
+            reference_sheet: $("cfgReferenceSheet").value.trim() || null,
+            description_display_maintained: $("cfgDisplayMaintained").checked,
+            display_all_products: $("cfgDisplayAllProducts").checked,
+            description_languages: [
+              {
+                code: "DE",
+                column: deColumn,
+                country_name: deCountry,
+              },
+              {
+                code: "EN",
+                column: enColumn,
+                country_name: enCountry,
+              },
+            ],
+          }),
+        });
+        const data = await response.json();
+        $("settingsSave").disabled = false;
+        if (!response.ok) {
+          logLine(
+            `Setari respinse: ${data.error || "eroare necunoscuta"}`,
+            "err",
+          );
+          alert(data.error || "Setarile nu au putut fi salvate.");
+          return;
+        }
+        await loadConfig();
+        closeSettings();
+        logLine("Setarile fluxului integrat au fost salvate.", "ok");
+      };
+
+      $("allowCommit").addEventListener("change", updateSaveModeHealth);
+      $("btnClearLog").onclick = () => {
+        $("log").innerHTML = "";
+      };
+      $("btnToggleLog").onclick = () => {
+        const hidden = $("log").classList.toggle("hidden");
+        $("btnToggleLog").textContent = hidden ? "Afiseaza" : "Ascunde";
+      };
+
+      // ---------- Queue builder ----------
+      function queueSelects() {
+        return Array.from(
+          document.querySelectorAll("#queueRows .queue-scheme"),
+        );
+      }
+
+      function usedSchemes(exceptSelect) {
+        return new Set(
+          queueSelects()
+            .filter((sel) => sel !== exceptSelect)
+            .map((sel) => sel.value),
+        );
+      }
+
+      function refreshQueueOptions() {
+        const selects = queueSelects();
+        selects.forEach((sel) => {
+          const taken = usedSchemes(sel);
+          Array.from(sel.options).forEach((opt) => {
+            opt.disabled = opt.value !== sel.value && taken.has(opt.value);
+          });
+        });
+        $("btnQueueAdd").disabled = selects.length >= schemes.length;
+      }
+
+      function firstFreeScheme() {
+        const taken = usedSchemes(null);
+        const free = schemes.find((s) => !taken.has(s.code));
+        return free ? free.code : "";
+      }
+
+      function addQueueRow(schemeCode, variantName) {
+        const code = schemeCode || firstFreeScheme();
+        if (!code) return;
+        if (!schemeCode && usedSchemes(null).has(code)) return;
+        queueRowSeq += 1;
+        const div = document.createElement("div");
+        div.className = "queue-row";
+        div.dataset.rowId = "qrow" + queueRowSeq;
+        const options = schemes
+          .map(
+            (s) =>
+              `<option value="${esc(s.code)}">${esc(s.code)} - ${esc(s.label)}</option>`,
+          )
+          .join("");
+        div.innerHTML = `
+          <div>
+            <label>Schema</label>
+            <select class="queue-scheme" title="Schema">${options}</select>
+          </div>
+          <div>
+            <label>Varianta SAP</label>
+            <input type="text" class="queue-variant" title="Varianta SAP" />
+          </div>
+          <button type="button" class="ghost compact queue-remove" title="Sterge" aria-label="Sterge">×</button>
+        `;
+        $("queueRows").appendChild(div);
+        const selectEl = div.querySelector(".queue-scheme");
+        const variantEl = div.querySelector(".queue-variant");
+        selectEl.value = code;
+        const applyVariant = () => {
+          const s = schemes.find((x) => x.code === selectEl.value);
+          if (s) variantEl.value = s.variant;
+        };
+        applyVariant();
+        if (variantName) variantEl.value = variantName;
+        selectEl.onchange = () => {
+          applyVariant();
+          refreshQueueOptions();
+        };
+        div.querySelector(".queue-remove").onclick = () => {
+          div.remove();
+          refreshQueueOptions();
+        };
+        refreshQueueOptions();
+      }
+      $("btnQueueAdd").onclick = () => addQueueRow();
+
+      function presetQueueRows() {
+        $("queueRows").innerHTML = "";
+        const preset = queuePreset.length
+          ? queuePreset
+          : schemes.map((s) => ({ scheme: s.code, variant: s.variant }));
+        const seen = new Set();
+        for (const row of preset) {
+          if (seen.has(row.scheme)) continue;
+          seen.add(row.scheme);
+          addQueueRow(row.scheme, row.variant);
+        }
+        refreshQueueOptions();
+      }
+
+      function collectQueueItems() {
+        return Array.from(
+          document.querySelectorAll("#queueRows .queue-row"),
+        ).map((div) => ({
+          scheme: div.querySelector(".queue-scheme").value,
+          variant: div.querySelector(".queue-variant").value.trim(),
+        }));
+      }
+
+      // ---------- Groups table + detail modal ----------
+
+      function describeTexts(entries) {
+        const list = entries || [];
+        if (!list.length) return "";
+        const byCode = new Map();
+        list.forEach((entry) => {
+          Object.entries(entry.texts || {}).forEach(([code, text]) => {
+            if (!byCode.has(code)) byCode.set(code, new Set());
+            byCode.get(code).add(text);
+          });
+        });
+        return Array.from(byCode.entries())
+          .map(
+            ([code, texts]) =>
+              `<b>${esc(code)}:</b> ${esc(Array.from(texts).join(" | "))}`,
+          )
+          .join("<br>");
+      }
+
+      function renderGroups() {
+        const body = $("groupBody");
+        if (!groups.length) {
+          body.innerHTML =
+            '<tr><td colspan="7" class="section-note">Niciun grup pregatit.</td></tr>';
+          return;
+        }
+        body.innerHTML = groups
+          .map(
+            (g, i) => `<tr>
+              <td><input type="checkbox" data-hs="${esc(g.hs_code)}" ${
+                selected.has(g.hs_code) ? "checked" : ""
+              } /></td>
+              <td><code>${esc(g.hs_code)}</code></td>
+              <td><b>${g.count}</b></td>
+              <td>${esc(g.tecdocs.join(", "))}</td>
+              <td class="section-note">${describeTexts(g.descriptions) || "-"}</td>
+              <td class="section-note">${esc(g.sample.join(", "))}${
+                g.count > g.sample.length ? " ..." : ""
+              }</td>
+              <td><button type="button" class="ghost compact view-detail" data-idx="${i}">Detalii</button></td>
+            </tr>`,
+          )
+          .join("");
+        body.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+          cb.onchange = () => {
+            const code = cb.dataset.hs;
+            if (cb.checked) selected.add(code);
+            else selected.delete(code);
+            updateSelection();
+          };
+        });
+        body.querySelectorAll(".view-detail").forEach((btn) => {
+          btn.onclick = () => openDetailModal(groups[Number(btn.dataset.idx)]);
+        });
+        updateSelection();
+      }
+
+      function openDetailModal(group) {
+        $("detailTitle").textContent =
+          `HS ${group.hs_code} - ${group.count} materiale`;
+        const rows = group.products || [];
+        const textsByTecdoc = new Map(
+          (group.descriptions || []).map((entry) => [entry.tecdoc, entry]),
+        );
+        $("detailBody").innerHTML =
+          rows
+            .map((p) => {
+              const entry = textsByTecdoc.get(p.tecdoc);
+              return `<tr>
+                <td>${esc(p.product)}</td>
+                <td>${esc(p.text)}</td>
+                <td>${esc(p.material_type)}</td>
+                <td>${esc(p.tecdoc)}</td>
+                <td>${esc(p.tecdoc_text)}</td>
+                <td class="section-note">${describeTexts(entry ? [entry] : []) || "-"}</td>
+              </tr>`;
+            })
+            .join("") ||
+          '<tr><td colspan="6" class="section-note">Nicio inregistrare.</td></tr>';
+        $("detailModal").classList.add("active");
+        $("detailModal").setAttribute("aria-hidden", "false");
+      }
+      $("detailClose").onclick = () => {
+        $("detailModal").classList.remove("active");
+        $("detailModal").setAttribute("aria-hidden", "true");
+      };
+
+      function updateSelection() {
+        const count = groups
+          .filter((g) => selected.has(g.hs_code))
+          .reduce((sum, g) => sum + g.count, 0);
+        $("statSelected").textContent = count;
+        $("btnClassify").disabled = !selected.size;
+        $("btnDescriptions").disabled = !selected.size;
+      }
+
+      function applyAnalysis(data) {
+        const shouldAutoStart = autoClassifyPending;
+        autoClassifyPending = false;
+        analysis = data.analysis;
+        analysisVariant = data.variant || "";
+        groups = data.groups || [];
+        selected = new Set(groups.map((g) => g.hs_code));
+        const s = data.summary || {};
+        $("statRows").textContent = s.worklist_rows || 0;
+        $("statReady").textContent = s.ready || 0;
+        $("statGroups").textContent = s.groups || 0;
+        $("statBlocked").textContent = s.blocked || 0;
+        const reasons = s.blocked_by_reason || {};
+        const labels = data.reason_labels || {};
+        $("blockedNote").textContent = Object.keys(reasons).length
+          ? "Nepregatite: " +
+            Object.entries(reasons)
+              .map(([k, v]) => `${labels[k] || k}: ${v}`)
+              .join(" | ")
+          : "";
+        $("btnReady").disabled = false;
+        $("btnBlocked").disabled = false;
+        $("btnAll").disabled = false;
+        $("btnNone").disabled = false;
+        renderGroups();
+        setWorkflow("hs", "active", "Analiza pregatita");
+        logLine(
+          `Analiza ${data.scheme} (${data.reference_column}): ${s.ready} pregatite in ${s.groups} grupuri, ${s.blocked} nepregatite.`,
+          "ok",
+        );
+        if (shouldAutoStart && selected.size) {
+          logLine(
+            "Mentinere automata activa: pornesc fara aprobare manuala.",
+            "step",
+          );
+          startClassify(true);
+        }
+      }
+
+      $("btnAll").onclick = () => {
+        selected = new Set(groups.map((g) => g.hs_code));
+        renderGroups();
+      };
+      $("btnNone").onclick = () => {
+        selected = new Set();
+        renderGroups();
+      };
+      $("btnReady").onclick = () => {
+        if (analysis) window.location = "/hs/ready/" + analysis;
+      };
+      $("btnBlocked").onclick = () => {
+        if (analysis) window.location = "/hs/blocked/" + analysis;
+      };
+
+      $("btnAnalyze").onclick = async () => {
+        const f = $("file").files[0];
+        if (!f) {
+          alert("Selecteaza exportul SAP.");
+          return;
+        }
+        const fd = new FormData();
+        fd.append("file", f);
+        fd.append("scheme", $("scheme").value);
+        setWorkflow("worklist", "active", "Analizez worklistul");
+        logLine("Analizez fisierul incarcat...", "step");
+        const r = await fetch("/hs/analyze", { method: "POST", body: fd });
+        const data = await r.json();
+        if (!r.ok) {
+          setWorkflow("worklist", "error", "Analiza a esuat");
+          logLine("Eroare analiza: " + (data.error || ""), "err");
+          return;
+        }
+        autoClassifyPending = $("autoClassify").checked;
+        applyAnalysis(data);
+      };
+
+      function setCurrentJob(job) {
+        currentJob = job;
+        const link = $("btnCurrentReport");
+        link.href = "/apps/hs/reports?report=" + encodeURIComponent(job);
+        link.classList.remove("hidden");
+      }
+
+      function subscribe(job, onEvent) {
+        if (jobES) jobES.close();
+        jobES = new EventSource("/hs/events/" + job);
+        jobES.onmessage = (e) => {
+          let ev;
+          try {
+            ev = JSON.parse(e.data);
+          } catch (_) {
+            return;
+          }
+          onEvent(ev);
+        };
+        jobES.addEventListener("end", () => {
+          if (jobES) jobES.close();
+        });
+      }
+
+      $("btnDownload").onclick = async () => {
+        $("btnDownload").disabled = true;
+        setWorkflow("worklist", "active", "Descarc worklistul");
+        logLine(
+          "Pornesc RPA: login SAP, varianta, executie, export...",
+          "step",
+        );
+        const r = await fetch("/hs/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scheme: $("scheme").value,
+            variant: $("variant").value.trim(),
+            headless: $("headless").checked,
+            credentials: getCreds(),
+          }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          setWorkflow("worklist", "error", "Descarcarea a esuat");
+          logLine("Eroare: " + (data.error || ""), "err");
+          $("btnDownload").disabled = false;
+          return;
+        }
+        setCurrentJob(data.job);
+        $("btnStop").disabled = false;
+        subscribe(data.job, (ev) => {
+          if (ev.type === "log") logLine(ev.msg, ev.level || "info");
+          else if (ev.type === "step") logLine(ev.msg, "step");
+          else if (ev.type === "download-ready") {
+            setWorkflow("worklist", "done", "Worklist descarcat");
+            logLine("Worklist descarcat: " + ev.file, "ok");
+          } else if (ev.type === "analysis") {
+            autoClassifyPending = $("autoClassify").checked;
+            applyAnalysis(ev);
+          } else if (ev.type === "fatal") {
+            setWorkflow(currentFlowStep, "error", "Flux intrerupt");
+            logLine("FATAL: " + ev.error, "err");
+          }
+        });
+        jobES.addEventListener("end", () => {
+          $("btnDownload").disabled = false;
+          $("btnStop").disabled = true;
+          pollSession();
+        });
+      };
+
+      async function startClassify(skipConfirm) {
+        if (!analysis || !selected.size) return;
+        const wantCommit = $("allowCommit").checked && allowCommitConfigured;
+        const count = groups
+          .filter((g) => selected.has(g.hs_code))
+          .reduce((s, g) => s + g.count, 0);
+        const msg = wantCommit
+          ? dual(
+              `ATENTIE: se vor salva codurile HS si apoi descrierile DE+EN pentru ${selected.size} grupuri / ${count} materiale. Continui?`,
+              `WARNING: HS codes followed by DE+EN descriptions will be saved for ${selected.size} groups / ${count} materials. Continue?`,
+            )
+          : dual(
+              `Mod dry-run: se completeaza dialogul pentru ${selected.size} grupuri / ${count} materiale, FARA salvare. Continui?`,
+              `Dry-run mode: the dialog will be filled for ${selected.size} groups / ${count} materials, WITHOUT saving. Continue?`,
+            );
+        if (!skipConfirm && !confirm(msg)) return;
+
+        $("btnClassify").disabled = true;
+        $("btnDescriptions").disabled = true;
+        resetClassifyMaterials();
+        lastRunCommit = wantCommit;
+        const r = await fetch("/hs/classify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            analysis,
+            hs_codes: Array.from(selected),
+            allow_commit: wantCommit,
+            variant: $("variant").value.trim(),
+            headless: $("headless").checked,
+            credentials: getCreds(),
+          }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          setWorkflow("hs", "error", "Pornirea a esuat");
+          logLine("Eroare: " + (data.error || ""), "err");
+          $("btnClassify").disabled = false;
+          $("btnDescriptions").disabled = !selected.size;
+          return;
+        }
+        setCurrentJob(data.job);
+        $("btnStop").disabled = false;
+        logLine(
+          data.dry_run
+            ? `Job dry-run pornit: ${data.groups} grupuri, ${data.products} materiale (fara F8).`
+            : `Job cu salvare pornit: ${data.groups} grupuri, ${data.products} materiale; urmeaza DE+EN dupa confirmarea HS.`,
+          data.dry_run ? "warn" : "step",
+        );
+        logLine(
+          `Varianta SAP aplicata per grup: ${data.variant || "(niciuna)"}`,
+          "info",
+        );
+        subscribe(data.job, (ev) => {
+          if (ev.type === "log") logLine(ev.msg, ev.level || "info");
+          else if (ev.type === "group-start") {
+            setWorkflow("hs", "active", `Mentinere HS ${ev.index}/${ev.total}`);
+            logLine(
+              `[${ev.index}/${ev.total}] HS ${ev.hs_code}: ${ev.count} materiale`,
+              "step",
+            );
+          } else if (ev.type === "material-end") {
+            pushMaterialStatus(ev);
+          } else if (ev.type === "group-end") {
+            if (!ev.ok && ev.status !== "partial") {
+              setWorkflow("hs", "error", `HS ${ev.hs_code} esuat`);
+            }
+            logLine(
+              ev.ok
+                ? `HS ${ev.hs_code}: ${ev.status} (${ev.selected}/${ev.requested})`
+                : `HS ${ev.hs_code} ${ev.status === "partial" ? "ATENTIE" : "EROARE"}: ${ev.msg}`,
+              ev.ok
+                ? ev.status === "dry_run"
+                  ? "warn"
+                  : "ok"
+                : ev.status === "partial"
+                  ? "warn"
+                  : "err",
+            );
+          } else if (ev.type === "description-start") {
+            setWorkflow(
+              "descriptions",
+              "active",
+              "Mentinere descrieri DE + EN",
+            );
+            logLine(
+              `Descrieri ${ev.languages.join("+")}: ${ev.total} materiale`,
+              "step",
+            );
+          } else if (ev.type === "description-item-end") {
+            logLine(
+              ev.ok
+                ? `${ev.material}: descrieri DE+EN salvate`
+                : `${ev.material}: sarit - ${ev.msg}`,
+              ev.ok ? "ok" : "warn",
+            );
+          } else if (ev.type === "description-end") {
+            const ds = ev.summary || {};
+            const issues = (ds.failed || 0) + (ds.not_found || 0);
+            setWorkflow(
+              ev.ok ? "done" : "descriptions",
+              ev.ok ? "active" : "error",
+              ev.ok
+                ? issues
+                  ? "Descrieri terminate, materiale sarite"
+                  : "Descrieri confirmate"
+                : "Descrierile au esuat",
+            );
+            logLine(
+              `Descrieri: salvate=${ds.saved || 0}/${ds.total || 0} sarite=${issues}`,
+              ev.ok ? (issues ? "warn" : "ok") : "err",
+            );
+          } else if (ev.type === "job-end") {
+            const s = ev.summary || {};
+            if (ev.ok === false) {
+              setWorkflow(currentFlowStep, "error", "Rulare incompleta");
+            } else if (s.dry_run) {
+              setWorkflow("hs", "done", "Dry-run HS finalizat");
+            } else {
+              setWorkflow("done", "done", "Schema completa");
+            }
+            logLine(
+              ev.ok === false
+                ? `Job incomplet: ${ev.error || "eroare necunoscuta"}`
+                : `Job terminat. Dry-run=${s.dry_run} Salvate=${s.committed} Erori=${s.failed} Sarite=${s.skipped}`,
+              ev.ok === false ? "err" : "ok",
+            );
+            logLine(
+              `Materiale: mentinute=${s.materials_committed || 0} dry-run=${s.materials_dry_run || 0} erori=${s.materials_failed || 0} blocate=${s.materials_blocked || 0}`,
+              "step",
+            );
+            if (classifyMaterials.committed.length) {
+              logLine(
+                `Mentinute: ${summarizeMaterialsByGroup(classifyMaterials.committed)}`,
+                "ok",
+              );
+            }
+            if (classifyMaterials.failed.length) {
+              logLine(
+                `Cu eroare: ${summarizeMaterialsByGroup(classifyMaterials.failed)}`,
+                "err",
+              );
+            }
+            if (classifyMaterials.blocked.length) {
+              logLine(
+                `Blocate (nepregatite): ${formatMaterialList(classifyMaterials.blocked)}`,
+                "warn",
+              );
+            }
+            renderResultAlerts(s);
+          } else if (ev.type === "fatal") {
+            logLine("FATAL: " + ev.error, "err");
+            renderFatalAlert(ev.error);
+          }
+        });
+        jobES.addEventListener("end", () => {
+          $("btnDescriptions").disabled = !selected.size;
+          $("btnStop").disabled = true;
+          pollSession();
+        });
+      }
+      $("btnClassify").onclick = () => startClassify(false);
+
+      $("btnDescriptions").onclick = async () => {
+        if (!analysis || !selected.size) return;
+        const wantCommit = $("allowCommit").checked && allowCommitConfigured;
+        const count = groups
+          .filter((g) => selected.has(g.hs_code))
+          .reduce((s, g) => s + g.count, 0);
+        if (!wantCommit) {
+          alert(
+            dual(
+              "Mentinerea manuala a descrierilor scrie in SAP. Bifeaza 'Salveaza modificarile in SAP'.",
+              "Manual description maintenance writes to SAP. Tick 'Save changes in SAP'.",
+            ),
+          );
+          return;
+        }
+        const msg = dual(
+          `ATENTIE: se vor mentine doar descrierile DE/EN pentru ${selected.size} grupuri TECDOC / ${count} materiale, FARA reclasificare HS. Continui?`,
+          `WARNING: only DE/EN descriptions will be maintained for ${selected.size} TECDOC groups / ${count} materials, WITHOUT rewriting HS. Continue?`,
+        );
+        if (!confirm(msg)) return;
+
+        $("btnClassify").disabled = true;
+        $("btnDescriptions").disabled = true;
+        lastRunCommit = true;
+        const r = await fetch("/hs/descriptions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            analysis,
+            hs_codes: Array.from(selected),
+            allow_commit: true,
+            headless: $("headless").checked,
+            credentials: getCreds(),
+          }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          setWorkflow("descriptions", "error", "Pornirea descrierilor a esuat");
+          logLine("Eroare: " + (data.error || ""), "err");
+          $("btnClassify").disabled = !selected.size;
+          $("btnDescriptions").disabled = !selected.size;
+          return;
+        }
+        setCurrentJob(data.job);
+        $("btnStop").disabled = false;
+        logLine(
+          `Job descrieri pornit: ${data.groups} grupuri, ${data.description_products} materiale (fara reclasificare HS).`,
+          "step",
+        );
+        subscribe(data.job, (ev) => {
+          if (ev.type === "log") logLine(ev.msg, ev.level || "info");
+          else if (ev.type === "description-start") {
+            setWorkflow(
+              "descriptions",
+              "active",
+              "Mentinere descrieri DE + EN",
+            );
+            logLine(
+              `Descrieri ${ev.languages.join("+")}: ${ev.total} materiale`,
+              "step",
+            );
+          } else if (ev.type === "description-item-end") {
+            logLine(
+              ev.ok
+                ? `${ev.material}: descrieri DE+EN salvate`
+                : `${ev.material}: sarit - ${ev.msg}`,
+              ev.ok ? "ok" : "warn",
+            );
+          } else if (ev.type === "description-end") {
+            const ds = ev.summary || {};
+            const issues = (ds.failed || 0) + (ds.not_found || 0);
+            setWorkflow(
+              ev.ok ? "done" : "descriptions",
+              ev.ok ? "active" : "error",
+              ev.ok
+                ? issues
+                  ? "Descrieri terminate, materiale sarite"
+                  : "Descrieri confirmate"
+                : "Descrierile au esuat",
+            );
+            logLine(
+              `Descrieri: salvate=${ds.saved || 0}/${ds.total || 0} sarite=${issues}`,
+              ev.ok ? (issues ? "warn" : "ok") : "err",
+            );
+          } else if (ev.type === "job-end") {
+            if (ev.ok === false) {
+              setWorkflow(currentFlowStep, "error", "Rulare incompleta");
+              logLine(
+                `Job descrieri incomplet: ${ev.error || "eroare necunoscuta"}`,
+                "err",
+              );
+            } else {
+              setWorkflow("done", "done", "Descrieri complete");
+              logLine("Job descrieri terminat, fara reclasificare HS.", "ok");
+            }
+          } else if (ev.type === "fatal") {
+            logLine("FATAL: " + ev.error, "err");
+            renderFatalAlert(ev.error);
+          }
+        });
+        jobES.addEventListener("end", () => {
+          $("btnClassify").disabled = !selected.size;
+          $("btnDescriptions").disabled = !selected.size;
+          $("btnClassify").disabled = false;
+          $("btnStop").disabled = true;
+          pollSession();
+        });
+      };
+
+      // ---------- Queue history ----------
+
+      function upsertQueueHistory(index, patch) {
+        let row = queueHistory.find((r) => r.index === index);
+        if (!row) {
+          row = { index };
+          queueHistory.push(row);
+          queueHistory.sort((a, b) => a.index - b.index);
+        }
+        Object.assign(row, patch);
+        renderQueueHistory();
+      }
+
+      function renderQueueHistory() {
+        const body = $("queueHistoryBody");
+        if (!queueHistory.length) {
+          body.innerHTML =
+            '<tr><td colspan="6" class="section-note">Nicio schema procesata inca.</td></tr>';
+          return;
+        }
+        body.innerHTML = queueHistory
+          .map((row) => {
+            const cs = row.classifySummary;
+            const ds = row.descriptionSummary;
+            const hsErrors = Number((cs && cs.failed) || 0);
+            const hsCommitted = Number((cs && cs.committed) || 0);
+            const hsDryRun = Number((cs && cs.dry_run) || 0);
+            const descErrors =
+              Number((ds && ds.failed) || 0) +
+              Number((ds && ds.not_found) || 0);
+            const hsChip = cs
+              ? `<span class="status-chip ${
+                  hsErrors ? "err" : hsDryRun ? "warn" : "ok"
+                }">HS ${
+                  hsErrors
+                    ? `${hsErrors} erori`
+                    : hsDryRun
+                      ? `${hsDryRun} dry-run`
+                      : `${hsCommitted} salvate`
+                }</span>`
+              : '<span class="status-chip">HS in asteptare</span>';
+            const descriptionChip = ds
+              ? `<span class="status-chip ${descErrors ? "err" : "ok"}">DE+EN ${
+                  descErrors
+                    ? `${descErrors} erori`
+                    : `${Number(ds.saved || 0)}/${Number(ds.total || 0)} salvate`
+                }</span>`
+              : `<span class="status-chip ${hsDryRun ? "warn" : ""}">${
+                  hsDryRun
+                    ? "Descrieri neexecutate in dry-run"
+                    : "DE+EN in asteptare"
+                }</span>`;
+            const readyGroups = row.summary
+              ? `${row.summary.ready} / ${row.summary.groups}`
+              : "-";
+            const blocked = row.summary ? row.summary.blocked : "-";
+            const remaining = row.remainingWorklist;
+            const status =
+              row.ok === false ? "Eroare" : row.ok === true ? "OK" : "In lucru";
+            const statusClass =
+              row.ok === false ? "err" : row.ok === true ? "ok" : "";
+            return `<tr>
+              <td>${row.index}</td>
+              <td><code>${esc(row.scheme || "")}</code></td>
+              <td>${esc(readyGroups)}</td>
+              <td>${esc(String(blocked))}</td>
+              <td>${hsChip}<br>${descriptionChip}</td>
+              <td style="padding:8px 10px">
+                <span class="status-chip ${statusClass}">${status}</span>
+                ${row.msg ? `<div class="section-note">${esc(row.msg)}</div>` : ""}
+                ${remaining && remaining.ok ? `<a class="nav-button compact" href="${esc(remaining.url)}">Worklist ramas</a>` : ""}
+                ${remaining && !remaining.ok ? `<div class="section-note">${esc(remaining.error || "Eroare fisier ramas")}</div>` : ""}
+                ${row.data ? `<button type="button" class="ghost compact view-analysis" data-index="${row.index}">Vezi</button>` : ""}
+              </td>
+            </tr>`;
+          })
+          .join("");
+        body.querySelectorAll(".view-analysis").forEach((btn) => {
+          btn.onclick = () => {
+            const row = queueHistory.find(
+              (r) => String(r.index) === btn.dataset.index,
+            );
+            if (row && row.data) applyAnalysis(row.data);
+          };
+        });
+      }
+
+      function handleQueueEvent(ev) {
+        if (ev.type === "log") logLine(ev.msg, ev.level || "info");
+        else if (ev.type === "queue-start") {
+          setWorkflow("worklist", "active", `Coada: ${ev.total} scheme`);
+          logLine(`Coada pornita: ${ev.total} scheme`, "step");
+        } else if (ev.type === "scheme-start") {
+          setWorkflow("worklist", "active", `Worklist ${ev.scheme}`);
+          logLine(
+            `[${ev.index}/${ev.total}] Schema ${ev.scheme} (${ev.variant})`,
+            "step",
+          );
+        } else if (ev.type === "scheme-analysis") {
+          applyAnalysis(ev);
+          upsertQueueHistory(ev.index, {
+            scheme: ev.scheme,
+            summary: ev.summary,
+            data: ev,
+          });
+        } else if (ev.type === "group-start") {
+          setWorkflow("hs", "active", `Mentinere HS ${ev.scheme || ""}`.trim());
+          logLine(`  HS ${ev.hs_code}: ${ev.count} materiale`, "step");
+        } else if (ev.type === "group-end") {
+          if (!ev.ok && ev.status !== "partial") {
+            setWorkflow("hs", "error", `HS ${ev.hs_code} esuat`);
+          }
+          logLine(
+            ev.ok
+              ? `  HS ${ev.hs_code}: ${ev.status} (${ev.selected}/${ev.requested})`
+              : `  HS ${ev.hs_code} ${ev.status === "partial" ? "ATENTIE" : "EROARE"}: ${ev.msg}`,
+            ev.ok
+              ? ev.status === "dry_run"
+                ? "warn"
+                : "ok"
+              : ev.status === "partial"
+                ? "warn"
+                : "err",
+          );
+        } else if (ev.type === "description-preflight") {
+          setWorkflow(
+            "hs",
+            "active",
+            ev.missing
+              ? "Precontrol DE/EN: materiale sarite"
+              : "Precontrol DE/EN complet",
+          );
+          logLine(
+            `  Precontrol descrieri ${ev.scheme}: ${ev.ready}/${ev.products} materiale au DE+EN`,
+            ev.missing ? "warn" : "step",
+          );
+        } else if (ev.type === "description-start") {
+          setWorkflow("descriptions", "active", "Mentinere descrieri DE + EN");
+          logLine(
+            `  Pornesc descrierile ${ev.languages.join("+")}: ${ev.total} materiale`,
+            "step",
+          );
+        } else if (ev.type === "description-item-end") {
+          logLine(
+            ev.ok
+              ? `  ${ev.material}: descrieri DE+EN salvate si confirmate`
+              : `  ${ev.material}: sarit - ${ev.msg}`,
+            ev.ok ? "ok" : "warn",
+          );
+        } else if (ev.type === "description-end") {
+          const ds = ev.summary || {};
+          const issues = (ds.failed || 0) + (ds.not_found || 0);
+          setWorkflow(
+            ev.ok ? "done" : "descriptions",
+            ev.ok ? "active" : "error",
+            ev.ok
+              ? issues
+                ? "Descrieri terminate, materiale sarite"
+                : "Descrieri confirmate"
+              : "Descrierile au esuat",
+          );
+          logLine(
+            `  Descrieri finalizate: salvate=${ds.saved || 0}/${ds.total || 0} sarite=${issues}`,
+            ev.ok ? (issues ? "warn" : "ok") : "err",
+          );
+        } else if (ev.type === "material-end") {
+          pushMaterialStatus(ev);
+        } else if (ev.type === "scheme-end") {
+          upsertQueueHistory(ev.index, {
+            scheme: ev.scheme,
+            ok: ev.ok,
+            status: ev.status || "",
+            msg: ev.msg,
+            classifySummary: ev.classify_summary,
+            descriptionSummary: ev.description_summary,
+            remainingWorklist: ev.remaining_worklist,
+          });
+          logLine(
+            ev.status === "no_variant"
+              ? `Schema ${ev.scheme} fara varianta SAP; trec la urmatoarea.`
+              : ev.status === "no_data"
+                ? `Schema ${ev.scheme} fara date; trec la urmatoarea.`
+                : ev.ok
+                  ? `Schema ${ev.scheme} finalizata.`
+                  : `Schema ${ev.scheme} EROARE: ${ev.msg}`,
+            ev.ok ? (ev.status ? "warn" : "ok") : "err",
+          );
+          if (ev.ok && !queueRunAutoClassify) {
+            setWorkflow("worklist", "done", "Analiza schemei completa");
+          } else if (ev.ok && lastRunCommit) {
+            setWorkflow("done", "done", `Schema ${ev.scheme} completa`);
+          } else if (ev.ok) {
+            setWorkflow("hs", "done", `Dry-run ${ev.scheme} finalizat`);
+          } else {
+            setWorkflow(
+              currentFlowStep,
+              "error",
+              `Schema ${ev.scheme} blocata`,
+            );
+          }
+          const cs = ev.classify_summary || {};
+          if (ev.ok && Object.keys(cs).length) {
+            logLine(
+              `  Materiale schema ${ev.scheme}: mentinute=${cs.materials_committed || 0} dry-run=${cs.materials_dry_run || 0} erori=${cs.materials_failed || 0} blocate=${cs.materials_blocked || 0}`,
+              "step",
+            );
+          }
+        } else if (ev.type === "queue-end") {
+          const s = ev.summary || {};
+          if (s.failed) {
+            setWorkflow(currentFlowStep, "error", "Coada oprita cu eroare");
+          } else if (queueRunAutoClassify && lastRunCommit) {
+            setWorkflow("done", "done", "Toate schemele sunt complete");
+          } else if (queueRunAutoClassify) {
+            setWorkflow("hs", "done", "Toate dry-run-urile sunt complete");
+          } else {
+            setWorkflow("worklist", "done", "Toate analizele sunt complete");
+          }
+          logLine(
+            `Coada terminata. Finalizate=${s.completed} Erori=${s.failed} Sarite=${s.skipped} FaraVarianta=${s.no_variant || 0} FaraDate=${s.no_data || 0}`,
+            s.failed ? "err" : "ok",
+          );
+          if (classifyMaterials.committed.length) {
+            logLine(
+              `Coada - mentinute: ${summarizeMaterialsByGroup(classifyMaterials.committed)}`,
+              "ok",
+            );
+          }
+          if (classifyMaterials.failed.length) {
+            logLine(
+              `Coada - erori: ${summarizeMaterialsByGroup(classifyMaterials.failed)}`,
+              "err",
+            );
+          }
+          if (classifyMaterials.blocked.length) {
+            logLine(
+              `Coada - blocate: ${formatMaterialList(classifyMaterials.blocked)}`,
+              "warn",
+            );
+          }
+          renderResultAlerts({
+            materials_committed: classifyMaterials.committed.length,
+            materials_dry_run: classifyMaterials.dry_run.length,
+            materials_failed: classifyMaterials.failed.length,
+            materials_blocked: classifyMaterials.blocked.length,
+            safety_aborted: !!s.safety_aborted,
+            abort_reason: s.abort_reason || "",
+          });
+        } else if (ev.type === "fatal") {
+          logLine("FATAL: " + ev.error, "err");
+          renderFatalAlert(ev.error);
+        }
+      }
+
+      $("btnQueueStart").onclick = async () => {
+        const items = collectQueueItems();
+        if (!items.length) {
+          alert("Adauga cel putin o schema in coada.");
+          return;
+        }
+        for (const it of items) {
+          if (!it.scheme) {
+            alert("Fiecare rand trebuie sa aiba o schema selectata.");
+            return;
+          }
+        }
+        const autoClassify = $("autoClassify").checked;
+        queueRunAutoClassify = autoClassify;
+        const wantCommit =
+          autoClassify && $("allowCommit").checked && allowCommitConfigured;
+        const msg = wantCommit
+          ? dual(
+              "ATENTIE: pentru fiecare schema coada va salva codurile HS, apoi descrierile DE si EN pentru fiecare material. Nu va porni schema urmatoare fara confirmarile SAP. Continui?",
+              "WARNING: for every scheme, the queue will save HS codes and then DE and EN descriptions for every material. The next scheme will not start without SAP confirmations. Continue?",
+            )
+          : autoClassify
+            ? dual(
+                "Coada va rula automat si va mentine grupurile in mod dry-run (fara F8) pentru fiecare schema. Continui?",
+                "The queue will run automatically and process groups in dry-run mode (without F8) for every scheme. Continue?",
+              )
+            : dual(
+                "Coada va descarca si analiza fiecare schema, fara mentinere automata. Continui?",
+                "The queue will download and analyze every scheme without automatic maintenance. Continue?",
+              );
+        if (!confirm(msg)) return;
+
+        queueHistory = [];
+        resetClassifyMaterials();
+        lastRunCommit = wantCommit;
+        renderQueueHistory();
+        $("btnQueueStart").disabled = true;
+        setWorkflow("worklist", "active", "Pornesc coada de scheme");
+        logLine(
+          `Pornesc coada automata: ${items.map((i) => i.scheme).join(", ")}`,
+          "step",
+        );
+
+        const r = await fetch("/hs/queue/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items,
+            auto_classify: autoClassify,
+            allow_commit: wantCommit,
+            headless: $("headless").checked,
+            credentials: getCreds(),
+          }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          setWorkflow("worklist", "error", "Coada nu a pornit");
+          logLine("Eroare: " + (data.error || ""), "err");
+          $("btnQueueStart").disabled = false;
+          return;
+        }
+        setCurrentJob(data.job);
+        $("btnStop").disabled = false;
+        subscribe(data.job, handleQueueEvent);
+        jobES.addEventListener("end", () => {
+          $("btnQueueStart").disabled = false;
+          $("btnStop").disabled = true;
+          pollSession();
+        });
+      };
+
+      $("btnStop").onclick = async () => {
+        if (!currentJob) return;
+        await fetch("/hs/stop/" + currentJob, { method: "POST" });
+        logLine("Cerere de oprire trimisa.", "warn");
+      };
+
+      const STATES = {
+        stopped: ["", "Browser oprit"],
+        starting: ["run", "Pornire browser"],
+        ready: ["ok", "Browser activ"],
+        busy: ["run", "In lucru"],
+        error: ["err", "Eroare browser"],
+        stopping: ["run", "Se inchide"],
+      };
+
+      function setSess(state, msg) {
+        const dot = $("sessStatus").querySelector(".dot");
+        const txt = $("sessStatus").querySelector("span:last-child");
+        const [cls, label] = STATES[state] || ["", state];
+        dot.className = "dot" + (cls ? " " + cls : "");
+        txt.textContent = label + (msg ? " - " + msg : "");
+      }
+
+      async function pollSession() {
+        try {
+          const s = await (await fetch("/hs/session/status")).json();
+          setSess(s.state, s.msg);
+        } catch (e) {}
+      }
+
+      const sessES = new EventSource("/hs/session/events");
+      sessES.onmessage = (e) => {
+        try {
+          const ev = JSON.parse(e.data);
+          if (ev.type === "log") logLine("[browser] " + ev.msg, ev.level);
+          else if (ev.type === "state") setSess(ev.state, ev.msg);
+          else if (ev.type === "session-ready") {
+            logLine("Sesiune SAP gata.", "ok");
+            pollSession();
+          }
+        } catch (err) {}
+      };
+
+      $("btnSessStop").onclick = async () => {
+        if (
+          !confirm(
+            "Inchid aplicatia (server + browser Chromium)? Dupa aceea poti relansa run.bat.",
+          )
+        )
+          return;
+        $("btnSessStop").disabled = true;
+        try {
+          const response = await fetch("/shutdown", { method: "POST" });
+          const result = await response.json();
+          if (!response.ok) {
+            logLine(result.error || "Nu am putut inchide aplicatia.", "err");
+            $("btnSessStop").disabled = false;
+            return;
+          }
+          document.body.innerHTML =
+            "<p style='padding:24px;font-family:Segoe UI'>Aplicatia s-a inchis. Poti relansa run.bat.</p>";
+        } catch (e) {
+          document.body.innerHTML =
+            "<p style='padding:24px;font-family:Segoe UI'>Aplicatia s-a inchis. Poti relansa run.bat.</p>";
+        }
+      };
+      $("btnReset").onclick = async () => {
+        if (
+          !confirm(
+            "Opresc procesele Chromium HS si sterg lock-urile profilului?",
+          )
+        )
+          return;
+        const r = await fetch("/hs/reset-browser", { method: "POST" });
+        const d = await r.json();
+        logLine(
+          `Curatat: ${(d.killed_pids || []).length} procese Chromium, ${(d.removed || []).length} lock-uri.`,
+          "ok",
+        );
+        setTimeout(pollSession, 500);
+      };
+
+      applyUiLanguage(uiLang);
+      setMode("queue");
+      setCreds(getCreds());
+      const hsWizard = createWizard($("hsWizard"));
+      const originalApplyUiLanguage = applyUiLanguage;
+      applyUiLanguage = function (next) {
+        originalApplyUiLanguage(next);
+        hsWizard.show(hsWizard.index, { scroll: false });
+      };
+      $("langRo").onclick = () => applyUiLanguage("ro");
+      $("langEn").onclick = () => applyUiLanguage("en");
+      const originalApplyAnalysis = applyAnalysis;
+      applyAnalysis = function (data) {
+        originalApplyAnalysis(data);
+        hsWizard.show(1);
+      };
+      const originalSetCurrentJob = setCurrentJob;
+      setCurrentJob = function (job) {
+        originalSetCurrentJob(job);
+        hsWizard.show(2);
+      };
+      loadSchemes().then(() => {
+        loadConfig();
+        presetQueueRows();
+      });
+      pollSession();
+      setInterval(pollSession, 5000);
+    </script>
+  </body>
+</html>
