@@ -13,7 +13,7 @@ REM =====================================================================
 setlocal
 cd /d "%~dp0"
 
-set "BUNDLE_NAME=FT6AUTO_v1.3"
+set "BUNDLE_NAME=FT6AUTO_v1.4"
 set "OUT_ZIP=%~dp0%BUNDLE_NAME%.zip"
 
 echo.

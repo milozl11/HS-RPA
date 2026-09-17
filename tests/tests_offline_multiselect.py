@@ -87,7 +87,22 @@ def drive(page, frame, log) -> None:
         if state.get("filled"):
             raise RuntimeError("valori vechi ramase in popup")
 
-    page.evaluate("t => { window.__clipboard = t; }", "\n".join(PRODUCTS))
+    hs_automation._set_windows_clipboard_text("\r\n".join(PRODUCTS))
+    page.evaluate(
+        """async text => {
+          if (!navigator.clipboard) {
+            Object.defineProperty(navigator, 'clipboard', {
+              configurable: true,
+              value: {
+                writeText: async value => { window.__clipboard = value; },
+                readText: async () => window.__clipboard || ''
+              }
+            });
+          }
+          await navigator.clipboard.writeText(text);
+        }""",
+        "\r\n".join(PRODUCTS),
+    )
     frame.locator('[data-rpa-multi-input="1"]').first.click()
     page.keyboard.press("Shift+F12")
     page.wait_for_timeout(200)
@@ -155,7 +170,20 @@ def main() -> int:
         # chrome-win path made this offline DOM regression fail on macOS/Linux
         # even though the application itself remains Windows-targeted.
         browser = pw.chromium.launch(headless=True)
-        page = browser.new_page()
+        context = browser.new_context()
+        context.grant_permissions(["clipboard-read", "clipboard-write"])
+        context.add_init_script(
+            """
+            Object.defineProperty(navigator, 'clipboard', {
+              configurable: true,
+              value: {
+                writeText: async text => { window.__clipboard = text; },
+                readText: async () => window.__clipboard || ''
+              }
+            });
+            """
+        )
+        page = context.new_page()
         results = [
             case_happy(page),
             case_leftovers(page),

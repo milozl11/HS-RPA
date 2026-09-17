@@ -121,6 +121,7 @@ def test_hidden_dialog_does_not_block_selection(page) -> None:
     page.set_content(
         """
         <div role="button" title="Get Variant">Get Variant</div>
+        <input title="Numbering Scheme" value="EDCHSCDEEX">
         <div role="dialog" id="old-popup" style="display:none">Old popup</div>
         <script>
           window.__keys = [];
@@ -134,6 +135,31 @@ def test_hidden_dialog_does_not_block_selection(page) -> None:
     )
     assert returned == frame
     assert page.evaluate("window.__keys") == []
+
+
+def test_return_to_selection_clicks_accessible_back_button(page) -> None:
+        page.set_content(
+                """
+                <button aria-label="Back (F3)">Back</button>
+                <div id="worklist">Product</div>
+                <script>
+                    document.querySelector('button').addEventListener('click', () => {
+                        document.body.innerHTML = `
+                            <button aria-label="Get Variant...">Get Variant</button>
+                            <input aria-label="Numbering Scheme" value="EDCHSCSGXX">`;
+                    });
+                </script>
+                """
+        )
+        logs: list[tuple[str, str]] = []
+        returned = hs_automation._return_to_selection(
+                page,
+                page.main_frame,
+                lambda level, message: logs.append((level, message)),
+                timeout_s=2,
+        )
+        assert returned == page.main_frame
+        assert any("Click Back" in message for _, message in logs), logs
 
 
 def test_classifier_prefers_ready_frame_over_stale_frame(page) -> None:
@@ -485,6 +511,9 @@ def main() -> int:
 
         test_hidden_dialog_does_not_block_selection(page)
         print("PASS hidden SAP dialogs do not block selection recovery")
+
+        test_return_to_selection_clicks_accessible_back_button(page)
+        print("PASS accessible Back returns to selection screen")
 
         test_classifier_prefers_ready_frame_over_stale_frame(page)
         print("PASS ready SAP frame wins over stale frame")

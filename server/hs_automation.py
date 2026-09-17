@@ -231,9 +231,14 @@ def _frame_probe(frame: Frame) -> dict:
         """() => {
             const visible = el => !!el && el.offsetParent !== null;
             const text = (document.body && document.body.innerText) || '';
+            const accessibleLabel = el => (
+                (el.getAttribute('title') || '') + ' ' +
+                (el.getAttribute('aria-label') || '') + ' ' +
+                (el.textContent || '')
+            ).replace(/\s+/g, ' ').trim();
             const hasVariant = Array.from(document.querySelectorAll(
-                '[title*="Get Variant" i]'
-            )).some(visible);
+                '[title], [aria-label], button, [role="button"]'
+            )).some(el => visible(el) && /get\s+variant/i.test(accessibleLabel(el)));
             const hasClassify = Array.from(document.querySelectorAll(
                 '[title*="Classify Products" i], [title*="Start Mass Classification" i]'
             )).some(visible);
@@ -1762,22 +1767,61 @@ def _return_to_selection(
         state = gf.evaluate(
             """() => {
                 const visible = el => !!el && el.offsetParent !== null;
+                const label = el => (
+                    (el.getAttribute('title') || '') + ' ' +
+                    (el.getAttribute('aria-label') || '') + ' ' +
+                    (el.textContent || '')
+                ).replace(/\s+/g, ' ').trim();
                 return {
                     hasGetVariant: Array.from(document.querySelectorAll(
-                        '[title*="Get Variant" i]'
-                    )).some(visible),
+                        '[title], [aria-label], button, [role="button"]'
+                    )).some(el => visible(el) && /get\s+variant/i.test(label(el))),
+                    hasScheme: Array.from(document.querySelectorAll('input')).some(
+                        input => visible(input) && /numbering\s*scheme|nummernschema/i.test(
+                            [
+                                input.getAttribute('title') || '',
+                                input.getAttribute('aria-label') || '',
+                                ...Array.from(input.labels || []).map(l => l.textContent || '')
+                            ].join(' ')
+                        )
+                    ),
                     hasDialog: Array.from(document.querySelectorAll(
                         '[role=dialog], [id^="webguiPopupWindow"], .lsPWNew, .LS_PopupWindow2'
                     )).some(visible),
                 };
             }"""
         )
-        if state.get("hasGetVariant") and not state.get("hasDialog"):
+        if (
+            state.get("hasGetVariant")
+            and state.get("hasScheme")
+            and not state.get("hasDialog")
+        ):
             return gf
         if state.get("hasDialog"):
             page.keyboard.press("Escape")
         else:
-            page.keyboard.press("F3")
+            back_sent = False
+            back_name = re.compile(r"^\s*(back|inapoi|zuruck|zurück)(?:\s*\(f3\))?\s*$", re.I)
+            for candidate in (
+                gf.get_by_role("button", name=back_name),
+                gf.locator('[title*="Back" i], [aria-label*="Back" i]'),
+            ):
+                try:
+                    button = candidate.first
+                    if button.is_visible() and button.is_enabled():
+                        button.click(timeout=2000)
+                        back_sent = True
+                        log("info", "Click Back trimis pentru revenirea la selectie")
+                        break
+                except Exception:
+                    continue
+            if not back_sent:
+                try:
+                    gf.locator("body").click(position={"x": 5, "y": 5}, timeout=1000)
+                except Exception:
+                    pass
+                page.keyboard.press("F3")
+                log("info", "F3 trimis pentru revenirea la selectie")
         page.wait_for_timeout(1000)
         try:
             gf = _classify_frame(page, timeout_s=3)
@@ -1915,21 +1959,31 @@ def _click_download_confirmation(
             except Exception as exc:
                 log("warn", f"Clickul Playwright pe OK a esuat: {str(exc)[:120]}")
 
-            page.wait_for_timeout(300)
             keyboard_fallback_used = True
 
-            try:
-                state = frame.evaluate(_JS_DOWNLOAD_CONFIRM_STATE)
-            except Exception:
-                state = {"open": False}
-            if not state.get("open"):
-                return True
+            close_deadline = time.time() + 4
+            while time.time() < close_deadline:
+                try:
+                    state = frame.evaluate(_JS_DOWNLOAD_CONFIRM_STATE)
+                except Exception:
+                    state = {"open": False}
+                if not state.get("open"):
+                    return True
+                page.wait_for_timeout(150)
 
             try:
-                control.press("Enter", timeout=3000)
+                fresh_frame, fresh_details = _mark_download_confirmation(page, preferred)
+                if fresh_frame is None:
+                    return True
+                fresh_control = (
+                    fresh_frame.locator(f"#{fresh_details['id']}").first
+                    if fresh_details.get("id")
+                    else fresh_frame.locator('[data-rpa-download-confirm="1"]').first
+                )
+                fresh_control.press("Enter", timeout=2000)
                 log("info", "Popup-ul a ramas deschis; am trimis Enter pe OK")
             except Exception as exc:
-                log("warn", f"Enter pe controlul OK a esuat: {str(exc)[:120]}")
+                log("info", f"Controlul OK nu mai este activ: {str(exc)[:100]}")
             try:
                 state = frame.evaluate(_JS_DOWNLOAD_CONFIRM_STATE)
             except Exception:
@@ -2140,6 +2194,27 @@ def _paste_products_via_multiple_selection(
     payload = "\r\n".join(unique)
     _set_windows_clipboard_text(payload)
     log("info", f"Clipboard Windows pregatit cu {len(unique)} produse")
+
+    try:
+        browser_clipboard = bool(
+            page.evaluate(
+                """async text => {
+                    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                        return false;
+                    }
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }""",
+                payload,
+            )
+        )
+    except Exception as exc:
+        browser_clipboard = False
+        log("warn", f"Clipboard browser indisponibil: {str(exc)[:100]}")
+    if browser_clipboard:
+        log("info", "Clipboard browser pregatit pentru SAP")
+    else:
+        log("warn", "Folosesc doar clipboard-ul Windows pentru SAP")
 
     # SAP reads the clipboard from the page, which the browser refuses while
     # the tab is not the focused document.
