@@ -545,7 +545,28 @@ def _commercial_description_frame(page: Page, timeout_s: float = 30.0) -> Frame:
 
 
 def _click_by_title(gf: Frame, pattern: str, timeout_ms: int = 8000) -> None:
-    gf.locator(f'[title*="{pattern}" i]').first.click(timeout=timeout_ms)
+    accessible_name = re.compile(rf"^\s*{re.escape(pattern)}(?:\.\.\.)?\s*$", re.I)
+    candidates = (
+        gf.get_by_role("button", name=accessible_name),
+        gf.locator(f'[aria-label*="{pattern}" i]'),
+        gf.locator(f'[title*="{pattern}" i]'),
+        gf.get_by_text(accessible_name, exact=True),
+    )
+    deadline = time.monotonic() + (timeout_ms / 1000)
+    while time.monotonic() < deadline:
+        for candidate in candidates:
+            try:
+                target = candidate.first
+                if target.is_visible() and target.is_enabled():
+                    target.click(timeout=min(2000, timeout_ms))
+                    return
+            except Exception:
+                continue
+        gf.page.wait_for_timeout(200)
+    raise TimeoutError(
+        f"Actiunea SAP {pattern!r} nu este vizibila sau activa dupa "
+        f"{timeout_ms} ms."
+    )
 
 
 _NO_VARIANT_RE = re.compile(

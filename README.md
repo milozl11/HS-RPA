@@ -41,7 +41,7 @@ networks that intercept HTTPS with an SSO/SAML proxy (Method B's downloads to
 python.org/pypi.org will fail on such networks with a SAML login page instead
 of the expected file).
 
-1. Get `FT6AUTO_v1.2.zip` from the project's **GitHub Releases** page, or from
+1. Get `FT6AUTO_v1.3.zip` from the project's **GitHub Releases** page, or from
    the person who built the bundle
 2. **Extract** the ZIP to any local folder (e.g. `C:\Tools\FT6AUTO`)
 3. **Double-click `run.bat`**

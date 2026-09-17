@@ -222,6 +222,22 @@ def test_apply_variant_completes_selection_flow(page) -> None:
     assert not page.locator("#variant-dialog").count()
 
 
+def test_apply_variant_accepts_accessible_get_variant_button(page) -> None:
+        page.set_content(
+                """
+                <button aria-label="Get Variant...">Open</button>
+                <script>
+                    window.__clicked = false;
+                    document.querySelector('button').addEventListener('click', () => {
+                        window.__clicked = true;
+                    });
+                </script>
+                """
+        )
+        hs_automation._click_by_title(page.main_frame, "Get Variant", timeout_ms=500)
+        assert page.evaluate("window.__clicked") is True
+
+
 def test_apply_variant_skips_when_no_variants_found(page) -> None:
     page.set_content(
         """
@@ -478,6 +494,9 @@ def main() -> int:
 
         test_apply_variant_completes_selection_flow(page)
         print("PASS complete Get Variant selection flow")
+
+        test_apply_variant_accepts_accessible_get_variant_button(page)
+        print("PASS accessible Get Variant button locator")
 
         test_apply_variant_skips_when_no_variants_found(page)
         print("PASS missing Get Variant result is skippable")
